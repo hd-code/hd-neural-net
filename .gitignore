@@ -1,0 +1,7 @@
+# System Files
+.DS_Store
+
+# Project Files
+/build
+/node_modules
+/package-lock.json

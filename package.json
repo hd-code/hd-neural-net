@@ -1,0 +1,22 @@
+{
+    "name": "hd-neural-net",
+    "version": "1.0.0",
+    "description": "A powerful node module, which lets you create, train and run calculations on a neural net. It uses a simple public interface and is lightweight and fast.",
+    "main": "./build/index.js",
+    "scripts": {
+        "build": "tsc",
+        "test": "tsc && mocha"
+    },
+    "keywords": [
+        "neural-net",
+        "ai",
+        "self-learning",
+        "machine-learning"
+    ],
+    "author": "Hannes Dröse",
+    "license": "ISC",
+    "devDependencies": {
+        "mocha": "^6.2.0",
+        "typescript": "^3.5.3"
+    }
+}
