@@ -1,6 +1,6 @@
 import * as fcLayer from "./fc-layers";
 
-interface hdNeuralNet {
+interface IHDNeuralNet {
     title?: string
     description?: string
     createdAt: Date
@@ -11,5 +11,5 @@ interface hdNeuralNet {
 }
 
 interface ILayers {
-    fullConnected: fcLayer.ILayer[]
+    fullyConnected: fcLayer.ILayer[]
 }

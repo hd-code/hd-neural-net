@@ -2,9 +2,11 @@
     "name": "hd-neural-net",
     "version": "1.0.0",
     "description": "A powerful node module, which lets you create, train and run calculations on a neural net. It uses a simple public interface and is lightweight and fast.",
-    "main": "./build/index.js",
+    "files": ["build"],
+    "main": "build/index.js",
     "scripts": {
-        "build": "tsc",
+        "prepublish": "tsc",
+        "start": "npm test",
         "test": "tsc && mocha"
     },
     "keywords": [
