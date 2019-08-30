@@ -1,64 +1,16 @@
 import { EActFunction, applyToVector } from "./activation-functions";
-import { isArrayOf, isMatrix, isNumber } from "./type-guards";
+import { deepClone } from "./helper";
 
-/*********************************** Public ***********************************/
+/* --------------------------------- Public --------------------------------- */
 
 export interface ILayer {
     actFunction: EActFunction
     weights: number[][] // [neurons on this layer][weights for outputs from prev layer]
 }
 
-interface ILayerConfig {
+export interface ILayerConfig {
     actFunction?: EActFunction
     numOfNeurons: number
-}
-
-export function isFCNet(numOfInputs :number, layers :any, errorDump :string[]) :layers is ILayer[] {
-    let result = true
-
-    // type checking
-    if (!isArrayOf(layers, isLayer)) {
-        errorDump.push('wrong datatypes')
-        return false
-    }
-
-    let indexOfOutputLayer = layers.length - 1
-
-    // check for invalid activation functions
-    layers.forEach((layer, i) => {
-        if (layer.actFunction < EActFunction.SIGMOID || EActFunction.BINARY < layer.actFunction) {
-            result = false
-            let error = 'Unknown activation function on '
-            error += indexOfOutputLayer === i ? 'output layer' : (i + 1 + '. hidden layer')
-            errorDump.push(error)
-        }
-    })
-
-    // check if all layer outputs match next layers inputs
-    let tmp :number[][] = []
-    for (let i = 0; i < numOfInputs; i++) {
-        tmp[i] = []
-    }
-    layers.reduce((prevLayerWeights, layer, i) => {
-        if (!doMatrizesMatch(prevLayerWeights, layer.weights)) {
-            result = false
-            let error = ''
-            switch (i) {
-                case 0:
-                    error = 'There are too many input values for this network'
-                    break;
-                case indexOfOutputLayer:
-                    error = 'Last hidden layer has too many outputs for the output layer'
-                    break;
-                default:
-                    error = i + '. hidden layer has too many outputs for the following layer'
-            }
-            errorDump.push(error)
-        }
-        return layer.weights
-    }, tmp)
-
-    return result
 }
 
 export function init(numOfInputs :number, outputLayer: ILayerConfig, hiddenLayers? :ILayerConfig[],
@@ -107,7 +59,7 @@ export function train(input :number[], expectedOutput :number[], learnRate :numb
     layers :ILayer[]) :ILayer[]
 {
     // make reverse version of layers -> easier to handle backward propagation
-    let layersReverse :ILayer[] = JSON.parse(JSON.stringify(layers))
+    let layersReverse :ILayer[] = deepClone(layers)
     layersReverse.reverse()
 
     // FORWARD PROPAGATION :
@@ -171,12 +123,7 @@ export function train(input :number[], expectedOutput :number[], learnRate :numb
     return result
 }
 
-/*********************************** Intern ***********************************/
-
-function isLayer(layer :any) :layer is ILayer {
-    return 'actFunction' in layer && isNumber(layer.actFunction)
-        && 'weights' in layer  && isMatrix(layer.weights)
-}
+/* --------------------------------- Intern --------------------------------- */
 
 interface ILayerResult {
     weighted: number[]  // weighted prev layers' results
@@ -225,17 +172,7 @@ function updateWeights(delta :number[], weights :number[][], actResultsPrevLayer
     })
 }
 
-/*********************************** Helper ***********************************/
-
-function doMatrizesMatch(m1 :number[][], m2 :number[][]) :boolean {
-    let result = true
-    m2.forEach(row => {
-        if (m1.length > row.length) {
-            result = false
-        }
-    })
-    return result
-}
+/* --------------------------------- Helper --------------------------------- */
 
 function createMatrixWithRandomValues(rows :number, columns :number) :number[][] {
     let result :number[][] = []
