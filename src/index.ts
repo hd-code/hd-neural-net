@@ -4,7 +4,7 @@ import * as fcValid from "./fc-validation";
 
 /* --------------------------------- Public --------------------------------- */
 
-interface IHDNeuralNet {
+export interface IHDNeuralNet {
     title?: string
     description?: string
     createdAt: Date
@@ -16,13 +16,13 @@ interface IHDNeuralNet {
 
 function init() {}
 
-function calc(input :number[], net :IHDNeuralNet) :number[]|null {
+export function calc(input :number[], net :IHDNeuralNet) :number[]|null {
     let valid = isVector(input) && isHDNeuralNet(net) 
         && fcValid.getNumOfNetInAndOutputs(net.layers).inputs === input.length
     return valid ? fcLayer.calc(input, net.layers) : null
 }
 
-function calcSet(inputs :number[][], net :IHDNeuralNet) :number[][]|null {
+export function calcSet(inputs :number[][], net :IHDNeuralNet) :number[][]|null {
     if (!isMatrix(inputs) || !isHDNeuralNet(net))
         return null
 
@@ -38,17 +38,42 @@ function calcSet(inputs :number[][], net :IHDNeuralNet) :number[][]|null {
     return allValid ? inputs.map(input => fcLayer.calc(input, net.layers)) : null
 }
 
-interface ITraingData {
+export interface ITraingData {
     input: number[]
     output: number[]
 }
 
-function train(data :ITraingData, _net :IHDNeuralNet, learningRate?:number, precision?:number) :IHDNeuralNet {
-    // TODO: Type Checking
-
+export function train(data :ITraingData, _net :IHDNeuralNet, learningRate?:number, precision?:number) :IHDNeuralNet|null {
     let net = deepClone(_net)
-    let result = net.layers
 
+    if (!isTrainingData(data) || !isHDNeuralNet(_net)) {
+        console.error('unknown data was passed')
+        return null
+    }
+
+    let numOfInAndOutputs = fcValid.getNumOfNetInAndOutputs(_net.layers)
+    if (   data.input.length  > numOfInAndOutputs.inputs
+        || data.output.length !== numOfInAndOutputs.outputs) 
+    {
+        console.error('number of inputs or expected outputs don\'t match with the provided neural net')
+        return null
+    }
+
+    precision = isNumber(precision) ? precision : net.precision
+    learningRate = isNumber(learningRate) ? learningRate : net.learningRate
+
+    let layers = net.layers
+    let output = fcLayer.calc(data.input, layers)
+    let epoche = 0
+
+    while(!closeEnough(data.output, output, precision)) {
+        layers = fcLayer.train(data.input, data.output, learningRate, layers)
+        output = fcLayer.calc(data.input, layers)
+        epoche++
+    }
+    console.log('Training finished after:', epoche, 'iterations')
+
+    net.layers = layers
     net.updatedAt = new Date
     return net
 }
@@ -67,7 +92,7 @@ const DEFAULT_LEARNING_RATE = .01
 const DEFAULT_PRECISION = .01
 
 function isHDNeuralNet(net :IHDNeuralNet) :net is IHDNeuralNet {
-    if ('layers' ! in net || fcValid.isFCNet(net.layers)) {
+    if (!('layers' in net) || !fcValid.isFCNet(net.layers)) {
         return false
     }
 
@@ -75,6 +100,19 @@ function isHDNeuralNet(net :IHDNeuralNet) :net is IHDNeuralNet {
     net.precision = isNumber(net.precision) ? net.precision : DEFAULT_PRECISION
     return true
 }
+
+function isTrainingData(data :ITraingData) :data is ITraingData {
+    return 'input'  in data && isVector(data.input)
+        && 'output' in data && isVector(data.output)
+}
+
+function closeEnough(x :number[], y :number[], delta :number) :boolean {
+    return x.reduce<boolean>((result, _, i) => {
+        if (Math.abs(x[i] - y[i]) > delta)
+            result = false
+        return result
+    }, true)
+} 
 
 /*
 export function init() :IHDNeuralNet {

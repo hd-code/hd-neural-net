@@ -6,7 +6,7 @@
     "main": "build/index.js",
     "scripts": {
         "prepublish": "npm run ts",
-        "start": "npm test",
+        "start": "npm run ts && node build/test.js",
         "test": "npm run ts && mocha",
         "ts": "rm -rf build && tsc",
         "ts:debug": "rm -rf build && tsc -p tsconfig.debug.json"
