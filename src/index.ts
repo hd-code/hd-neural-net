@@ -112,17 +112,4 @@ function closeEnough(x :number[], y :number[], delta :number) :boolean {
             result = false
         return result
     }, true)
-} 
-
-/*
-export function init() :IHDNeuralNet {
-    let result :IHDNeuralNet = {
-        createdAt: new Date,
-        updatedAt: new Date,
-        learningRate: DEFAULT_LEARNING_RATE,
-        precision: DEFAULT_PRECISION,
-        layers: fcLayer.init()
-    }
-    return result
 }
-*/

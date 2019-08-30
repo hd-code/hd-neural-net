@@ -22,15 +22,12 @@ export function init(numOfInputs :number, outputLayer: ILayerConfig, hiddenLayer
     if (hiddenLayers)
         hiddenLayers.forEach(layer => neuronsPerLayer.push(layer.numOfNeurons) )
 
-    // add bias neuron if necessary
-    // if (!noBias)
-    //     neuronsPerLayer = neuronsPerLayer.map(number => number+1)
-
     // create hidden layers. Default activation function: Sigmoid
     let result :ILayer[] = []
     if (hiddenLayers) {
         result = hiddenLayers.map((layer, i) => {
             let neurons = neuronsPerLayer[i+1]
+            // if bias is used, one additional weight per neuron is needed
             let weights = neuronsPerLayer[i] + (!noBias ? 1 : 0)
             return <ILayer>{
                 actFunction: layer.actFunction || EActFunction.SIGMOID,
@@ -40,10 +37,12 @@ export function init(numOfInputs :number, outputLayer: ILayerConfig, hiddenLayer
     }
 
     // add output layer, Default activation function: ReLU
-    let lastLayer = neuronsPerLayer[neuronsPerLayer.length - 1] + (!noBias ? 1 : 0)
+    // if bias is used, one additional weight per neuron is needed
+    let lastLayerWeights = neuronsPerLayer[neuronsPerLayer.length - 1]
+        + (!noBias ? 1 : 0)
     result.push(<ILayer>{
         actFunction: outputLayer.actFunction || EActFunction.RELU,
-        weights: createMatrixWithRandomValues(outputLayer.numOfNeurons, lastLayer)
+        weights: createMatrixWithRandomValues(outputLayer.numOfNeurons, lastLayerWeights)
     })
 
     return result
@@ -74,7 +73,7 @@ export function train(input :number[], expectedOutput :number[], learnRate :numb
     }, initLayerResult)
     layerResults.unshift(initLayerResult)
 
-    // add bias neuron, if necessary. This is added on activation results.
+    // add bias neuron, if necessary. This is added on activation results only.
     layers.forEach((layer, i) => {
         let diff = layer.weights[0].length - layerResults[i].activated.length
         while (0 < diff--) layerResults[i].activated.push(1)

@@ -9,13 +9,13 @@ export function isFCNet(layers :ILayer[]) :layers is ILayer[] {
 
     // type checking
     if (!isArrayOf(layers, isLayer)) {
-        console.error('Layers have wrong structure or datatypes')
+        console.error('layers have wrong structure or datatypes')
         return false
     }
 
     let indexOfOutputLayer = layers.length - 1
 
-    // check for invalid activation functions
+    // check for invalid activation functions, TODO: auslagern
     layers.forEach((layer, i) => {
         if (layer.actFunction < EActFunction.SIGMOID || EActFunction.BINARY < layer.actFunction) {
             result = false
