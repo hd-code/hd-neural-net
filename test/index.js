@@ -1,164 +1,135 @@
 const assert = require('assert');
-const fcl = require('../build/fc-layers');
+const main = require('../build/index')
 const actFunc = require('../build/activation-functions');
 
 describe('Test ' + __filename.substr(__dirname.length), () => {
-
-describe('init', () => {
     describe('1) 2,2 Net', () => {
-        let outputLayer = {
-            actFunction: actFunc.EActFunction.RELU,
-            numOfNeurons: 2
-        }
-        let net = fcl.init(2, outputLayer)
+        let net = main.init(2,2)
+        let layers = net.layers
 
         it('should have 1 layer', () => {
-            assert.strictEqual(net.length, 1)
+            assert.strictEqual(layers.length, 1)
         })
         it('layers actFunc should be ReLU', () => {
-            assert.strictEqual(net[0].actFunction, actFunc.EActFunction.RELU)
+            assert.strictEqual(layers[0].actFunction, actFunc.EActFunction.RELU)
         })
         it('layer should have 2 neurons', () => {
-            assert.strictEqual(net[0].weights.length, 2)
+            assert.strictEqual(layers[0].weights.length, 2)
         })
         it('both should have 3 weights', () => {
-            assert.strictEqual(net[0].weights[0].length, 3)
-            assert.strictEqual(net[0].weights[1].length, 3)
+            assert.strictEqual(layers[0].weights[0].length, 3)
+            assert.strictEqual(layers[0].weights[1].length, 3)
         })
     })
 
     describe('2) 2,2,2 Net', () => {
-        let hiddenLayers = [
-            {
-                actFunction: actFunc.EActFunction.SIGMOID,
-                numOfNeurons: 2
-            }
-        ]
-        let outputLayer = {
-            actFunction: actFunc.EActFunction.RELU,
-            numOfNeurons: 2
-        }
-        let net = fcl.init(2, outputLayer, hiddenLayers)
+        let net = main.init(2,2,[2])
+        let layers = net.layers
 
         it('should have 2 layers', () => {
-            assert.strictEqual(net.length, 2)
+            assert.strictEqual(layers.length, 2)
         })
 
         it('hidden layers actFunc should be Sigmoid', () => {
-            assert.strictEqual(net[0].actFunction, actFunc.EActFunction.SIGMOID)
+            assert.strictEqual(layers[0].actFunction, actFunc.EActFunction.SIGMOID)
         })
         it('hidden layer should have 2 neurons', () => {
-            assert.strictEqual(net[0].weights.length, 2)
+            assert.strictEqual(layers[0].weights.length, 2)
         })
         it('hidden layers neurons should have 3 weights', () => {
-            assert.strictEqual(net[0].weights[0].length, 3)
-            assert.strictEqual(net[0].weights[1].length, 3)
+            assert.strictEqual(layers[0].weights[0].length, 3)
+            assert.strictEqual(layers[0].weights[1].length, 3)
         })
 
         it('output layers actFunc should be ReLU', () => {
-            assert.strictEqual(net[1].actFunction, actFunc.EActFunction.RELU)
+            assert.strictEqual(layers[1].actFunction, actFunc.EActFunction.RELU)
         })
         it('output layer should have 2 neurons', () => {
-            assert.strictEqual(net[1].weights.length, 2)
+            assert.strictEqual(layers[1].weights.length, 2)
         })
         it('output layers neurons should have 3 weights', () => {
-            assert.strictEqual(net[1].weights[0].length, 3)
-            assert.strictEqual(net[1].weights[1].length, 3)
+            assert.strictEqual(layers[1].weights[0].length, 3)
+            assert.strictEqual(layers[1].weights[1].length, 3)
         })
     })
 
     describe('3) 2,2,2 Net without bias', () => {
-        let hiddenLayers = [
-            {
-                actFunction: actFunc.EActFunction.SIGMOID,
-                numOfNeurons: 2
-            }
-        ]
-        let outputLayer = {
-            actFunction: actFunc.EActFunction.RELU,
-            numOfNeurons: 2
-        }
-        let net = fcl.init(2, outputLayer, hiddenLayers, true)
+        let options = {noBias: true}
+        let net = main.init(2, 2, [2], options)
+        let layers = net.layers
 
         it('should have 2 layers', () => {
-            assert.strictEqual(net.length, 2)
+            assert.strictEqual(layers.length, 2)
         })
 
         it('hidden layers actFunc should be Sigmoid', () => {
-            assert.strictEqual(net[0].actFunction, actFunc.EActFunction.SIGMOID)
+            assert.strictEqual(layers[0].actFunction, actFunc.EActFunction.SIGMOID)
         })
         it('hidden layer should have 2 neurons', () => {
-            assert.strictEqual(net[0].weights.length, 2)
+            assert.strictEqual(layers[0].weights.length, 2)
         })
         it('hidden layers neurons should have 2 weights', () => {
-            assert.strictEqual(net[0].weights[0].length, 2)
-            assert.strictEqual(net[0].weights[1].length, 2)
+            assert.strictEqual(layers[0].weights[0].length, 2)
+            assert.strictEqual(layers[0].weights[1].length, 2)
         })
 
         it('output layers actFunc should be ReLU', () => {
-            assert.strictEqual(net[1].actFunction, actFunc.EActFunction.RELU)
+            assert.strictEqual(layers[1].actFunction, actFunc.EActFunction.RELU)
         })
         it('output layer should have 2 neurons', () => {
-            assert.strictEqual(net[1].weights.length, 2)
+            assert.strictEqual(layers[1].weights.length, 2)
         })
         it('output layers neurons should have 2 weights', () => {
-            assert.strictEqual(net[1].weights[0].length, 2)
-            assert.strictEqual(net[1].weights[1].length, 2)
+            assert.strictEqual(layers[1].weights[0].length, 2)
+            assert.strictEqual(layers[1].weights[1].length, 2)
         })
     })
 
     describe('4) 2,2,3,2 Net all binary as actFunc', () => {
-        let hiddenLayers = [
-            {
-                actFunction: actFunc.EActFunction.BINARY,
-                numOfNeurons: 2
-            },
-            {
-                actFunction: actFunc.EActFunction.BINARY,
-                numOfNeurons: 3
+        let options = {
+            activationFunctions: {
+                hiddenLayers: [actFunc.EActFunction.BINARY, actFunc.EActFunction.BINARY],
+                outputLayer: actFunc.EActFunction.BINARY
             }
-        ]
-        let outputLayer = {
-            actFunction: actFunc.EActFunction.BINARY,
-            numOfNeurons: 2
         }
-        let net = fcl.init(2, outputLayer, hiddenLayers)
+        let net = main.init(2, 2, [2, 3], options)
+        let layers = net.layers
 
         it('should have 3 layers', () => {
-            assert.strictEqual(net.length, 3)
+            assert.strictEqual(layers.length, 3)
         })
 
         it('hidden layers actFunc should be Binary', () => {
-            assert.strictEqual(net[0].actFunction, actFunc.EActFunction.BINARY)
-            assert.strictEqual(net[1].actFunction, actFunc.EActFunction.BINARY)
+            assert.strictEqual(layers[0].actFunction, actFunc.EActFunction.BINARY)
+            assert.strictEqual(layers[1].actFunction, actFunc.EActFunction.BINARY)
         })
         it('first hidden layer should have 2, second 3 neurons', () => {
-            assert.strictEqual(net[0].weights.length, 2)
-            assert.strictEqual(net[1].weights.length, 3)
+            assert.strictEqual(layers[0].weights.length, 2)
+            assert.strictEqual(layers[1].weights.length, 3)
         })
         it('hidden layers neurons should have 3 weights', () => {
-            assert.strictEqual(net[0].weights[0].length, 3)
-            assert.strictEqual(net[0].weights[1].length, 3)
-            assert.strictEqual(net[1].weights[0].length, 3)
-            assert.strictEqual(net[1].weights[1].length, 3)
-            assert.strictEqual(net[1].weights[2].length, 3)
+            assert.strictEqual(layers[0].weights[0].length, 3)
+            assert.strictEqual(layers[0].weights[1].length, 3)
+            assert.strictEqual(layers[1].weights[0].length, 3)
+            assert.strictEqual(layers[1].weights[1].length, 3)
+            assert.strictEqual(layers[1].weights[2].length, 3)
         })
 
         it('output layers actFunc should be Binary', () => {
-            assert.strictEqual(net[2].actFunction, actFunc.EActFunction.BINARY)
+            assert.strictEqual(layers[2].actFunction, actFunc.EActFunction.BINARY)
         })
         it('output layer should have 2 neurons', () => {
-            assert.strictEqual(net[2].weights.length, 2)
+            assert.strictEqual(layers[2].weights.length, 2)
         })
         it('output layers neurons should have 4 weights', () => {
-            assert.strictEqual(net[2].weights[0].length, 4)
-            assert.strictEqual(net[2].weights[1].length, 4)
+            assert.strictEqual(layers[2].weights[0].length, 4)
+            assert.strictEqual(layers[2].weights[1].length, 4)
         })
     })
 })
-
+/*
 describe('calc', () => {
-    describe('1) 2,2 net', () => {
+    describe('1) 2,2 layers', () => {
         const NET = [
             {
                 actFunction: actFunc.EActFunction.RELU,
@@ -200,7 +171,7 @@ describe('calc', () => {
         })
     })
 
-    describe('2) 2,2 net no bias', () => {
+    describe('2) 2,2 layers no bias', () => {
         const NET = [
             {
                 actFunction: actFunc.EActFunction.RELU,
@@ -244,7 +215,7 @@ describe('calc', () => {
         })
     })
 
-    describe('3) 2,2,2 net hidden layer linear', () => {
+    describe('3) 2,2,2 layers hidden layer linear', () => {
         const NET = [
             {
                 actFunction: actFunc.EActFunction.LINEAR,
@@ -301,7 +272,7 @@ describe('calc', () => {
 })
 
 describe('train', () => {
-    describe('1) 2,2,2 net hidden layer linear', () => {
+    describe('1) 2,2,2 layers hidden layer linear', () => {
         const NET = [
             {
                 actFunction: actFunc.EActFunction.LINEAR,
@@ -325,16 +296,14 @@ describe('train', () => {
             /*
                 result hidden layer: [1, 3.3], result output layer: [2.15, 3,53]
                 delta output layer: [1.15, 2.03] delta hidden layer: [1.766, .778]
-            */
+            *
             // TODO: check plausibility
             fcl.train(INPUT, OUTPUT, 1, NET)
         })
     })
 })
 
-})
-
-/* --------------------------------- Helper --------------------------------- */
+/*********************************** Helper ***********************************/
 function round(number, precision) {
     var pow = 10 ** precision
     return Math.round(number * pow) / pow

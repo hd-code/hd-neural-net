@@ -9,28 +9,28 @@ export interface ILayer {
 }
 
 export interface ILayerConfig {
-    actFunction?: EActFunction
+    actFunction: EActFunction
     numOfNeurons: number
 }
 
-export function init(numOfInputs :number, outputLayer: ILayerConfig, hiddenLayers? :ILayerConfig[],
-    noBias? :boolean) :ILayer[]
+export function init(numOfInputs: number, outputLayer: ILayerConfig, hiddenLayers?: ILayerConfig[],
+    noBias?: boolean): ILayer[]
 {
     // prepare aux array, which holds th number of neurons for each layer except
     // the output layer
-    let neuronsPerLayer :number[] = [numOfInputs]
+    let neuronsPerLayer: number[] = [numOfInputs]
     if (hiddenLayers)
         hiddenLayers.forEach(layer => neuronsPerLayer.push(layer.numOfNeurons) )
 
     // create hidden layers. Default activation function: Sigmoid
-    let result :ILayer[] = []
+    let result: ILayer[] = []
     if (hiddenLayers) {
         result = hiddenLayers.map((layer, i) => {
             let neurons = neuronsPerLayer[i+1]
             // if bias is used, one additional weight per neuron is needed
-            let weights = neuronsPerLayer[i] + (!noBias ? 1 : 0)
+            let weights = neuronsPerLayer[i] + (!noBias ? 1:  0)
             return <ILayer>{
-                actFunction: layer.actFunction || EActFunction.SIGMOID,
+                actFunction: layer.actFunction,
                 weights: createMatrixWithRandomValues(neurons, weights)
             }
         })
@@ -39,33 +39,35 @@ export function init(numOfInputs :number, outputLayer: ILayerConfig, hiddenLayer
     // add output layer, Default activation function: ReLU
     // if bias is used, one additional weight per neuron is needed
     let lastLayerWeights = neuronsPerLayer[neuronsPerLayer.length - 1]
-        + (!noBias ? 1 : 0)
+        + (!noBias ? 1:  0)
     result.push(<ILayer>{
-        actFunction: outputLayer.actFunction || EActFunction.RELU,
+        actFunction: outputLayer.actFunction,
         weights: createMatrixWithRandomValues(outputLayer.numOfNeurons, lastLayerWeights)
     })
 
     return result
 }
 
-export function calc(input :number[], layers :ILayer[]) :number[] {
+export function calc(input: number[], layers: ILayer[]): number[] {
     return layers.reduce((result, layer) => {
         return calcLayerResult(result, layer).activated
     }, input)
 }
 
-export function train(input :number[], expectedOutput :number[], learnRate :number,
-    layers :ILayer[]) :ILayer[]
+export function train(_input: number[], expectedOutput: number[], learnRate: number,
+    layers: ILayer[]): ILayer[]
 {
+    let input = deepClone(_input)
+
     // make reverse version of layers -> easier to handle backward propagation
-    let layersReverse :ILayer[] = deepClone(layers)
+    let layersReverse: ILayer[] = deepClone(layers)
     layersReverse.reverse()
 
-    // FORWARD PROPAGATION :
+    // FORWARD PROPAGATION: 
 
     // calc LayerResults and store all intermediate results
-    let layerResults :ILayerResult[] = []
-    let initLayerResult :ILayerResult = { activated: input, weighted: [] }
+    let layerResults: ILayerResult[] = []
+    let initLayerResult: ILayerResult = { activated: input, weighted: [] }
     layers.reduce((prevLayerResult, layer) => {
         let layerResult = calcLayerResult(prevLayerResult.activated, layer)
         layerResults.push(layerResult)
@@ -82,7 +84,7 @@ export function train(input :number[], expectedOutput :number[], learnRate :numb
     // reverse layerResults -> prepare for backpropagation
     layerResults.reverse()
 
-    // BACKPROPAGATION :
+    // BACKPROPAGATION: 
     
     // calc deltas
     // Delta basically tells how much the result is "off".
@@ -97,11 +99,12 @@ export function train(input :number[], expectedOutput :number[], learnRate :numb
     //              must be distributed to these layers neurons using the 
     //              corresponding weights. This is done by multiplying the prev
     //              delta with the transposed weight matrix.
-    let deltas :number[][] = []
-    layersReverse.forEach((layer, i) => {
+    let deltas: number[][] = []
+    layersReverse.forEach((_, i) => {
         deltas[i] = (i === 0)
-            ? initialDelta(expectedOutput, layerResults[i], layer)
-            : updateDelta(deltas[i-1], layerResults[i], layer)
+            ? initialDelta(expectedOutput, layerResults[i], layersReverse[i].actFunction)
+           :  updateDelta(deltas[i-1], layersReverse[i-1].weights, layerResults[i], 
+                layersReverse[i].actFunction)
     })
 
     // update weights
@@ -129,8 +132,8 @@ interface ILayerResult {
     activated: number[] // activation function applied to results from weighted
 }
 
-function calcLayerResult(input :number[], layer :ILayer) :ILayerResult {
-    let result :ILayerResult = { weighted: [], activated: [] }
+function calcLayerResult(input: number[], layer: ILayer): ILayerResult {
+    let result: ILayerResult = { weighted: [], activated: [] }
 
     result.weighted  = multiplyVectorWithMatrix(input, layer.weights)
     result.activated = applyToVector(result.weighted, layer.actFunction)
@@ -138,21 +141,25 @@ function calcLayerResult(input :number[], layer :ILayer) :ILayerResult {
     return result
 }
 
-function initialDelta(expectedOutput :number[], outputLayerResult :ILayerResult, outputLayer :ILayer) :number[] {
-    let gradients = applyToVector(outputLayerResult.weighted, outputLayer.actFunction, true)
+function initialDelta(expectedOutput: number[], layerResult: ILayerResult, 
+    actFunc: EActFunction): number[] 
+{
+    let gradients = applyToVector(layerResult.weighted, actFunc, true)
 
     return expectedOutput.map((_, i) => {
-        return gradients[i] * (outputLayerResult.activated[i] - expectedOutput[i])
+        return gradients[i] * (layerResult.activated[i] - expectedOutput[i])
     })
 }
 
-function updateDelta(prevDelta :number[], layerResult :ILayerResult, layer :ILayer) :number[] {
-    let gradients = applyToVector(layerResult.weighted, layer.actFunction, true)
+function updateDelta(prevDelta: number[], weightsToPrevLayer: number[][],
+    layerResult: ILayerResult, actFunc: EActFunction): number[] 
+{
+    let gradients = applyToVector(layerResult.weighted, actFunc, true)
 
     // If there is a bias neuron, errorForThisLayer has a delta for that bias
     // as its last entry. This is not needed, so it will always be ignored.
     // Nonetheless, its calculated here because of laziness. ;-)
-    let matrix = transposeMatrix(layer.weights)
+    let matrix = transposeMatrix(weightsToPrevLayer)
     let errorForThisLayer = multiplyVectorWithMatrix(prevDelta, matrix)
 
     // Ignores bias neuron if there is one.
@@ -161,8 +168,8 @@ function updateDelta(prevDelta :number[], layerResult :ILayerResult, layer :ILay
     })
 }
 
-function updateWeights(delta :number[], weights :number[][], actResultsPrevLayer :number[],
-    learnRate :number) :number[][] 
+function updateWeights(delta: number[], weights: number[][], actResultsPrevLayer: number[],
+    learnRate: number): number[][] 
 {
     return weights.map((neuron, i) => {
         return neuron.map((weight, j) => {
@@ -173,19 +180,19 @@ function updateWeights(delta :number[], weights :number[][], actResultsPrevLayer
 
 /* --------------------------------- Helper --------------------------------- */
 
-function createMatrixWithRandomValues(rows :number, columns :number) :number[][] {
-    let result :number[][] = []
+function createMatrixWithRandomValues(rows: number, columns: number): number[][] {
+    let result: number[][] = []
     for (var i = 0; i < rows; i++) {
-        let row :number[] = []
+        let row: number[] = []
         for (var j = 0; j < columns; j++) {
-            row.push(Math.random())
+            row.push(Math.random() + 1)
         }
         result.push(row)
     }
     return result
 }
 
-function multiplyVectorWithMatrix(_vector :number[], matrix :number[][]) :number[] {
+function multiplyVectorWithMatrix(_vector: number[], matrix: number[][]): number[] {
     let vector = [..._vector]
     
     // add bias neuron if necessary
@@ -199,6 +206,6 @@ function multiplyVectorWithMatrix(_vector :number[], matrix :number[][]) :number
     })
 }
 
-function transposeMatrix(matrix :number[][]) :number[][] {
+function transposeMatrix(matrix: number[][]): number[][] {
     return matrix[0].map((_, i) => matrix.map(row => row[i]))
 }

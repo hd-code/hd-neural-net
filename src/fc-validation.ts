@@ -1,10 +1,10 @@
-import { isArrayOf, isMatrix, isNumber } from "./helper";
+import { isArrayOf, isMatrix } from "./helper";
 import { ILayer } from "./fc-layers";
-import { EActFunction } from "./activation-functions";
+import { isActivationFunction } from "./activation-functions";
 
 /* --------------------------------- Public --------------------------------- */
 
-export function isFCNet(layers :ILayer[]) :layers is ILayer[] {
+export function isFCNet(layers: ILayer[]): layers is ILayer[] {
     let result = true
 
     // type checking
@@ -13,19 +13,8 @@ export function isFCNet(layers :ILayer[]) :layers is ILayer[] {
         return false
     }
 
-    let indexOfOutputLayer = layers.length - 1
-
-    // check for invalid activation functions, TODO: auslagern
-    layers.forEach((layer, i) => {
-        if (layer.actFunction < EActFunction.SIGMOID || EActFunction.BINARY < layer.actFunction) {
-            result = false
-            let error = 'Unknown activation function on '
-            error += indexOfOutputLayer === i ? 'output layer' : (i + 1 + '. hidden layer')
-            console.error(error)
-        }
-    })
-
     // check if all layer outputs match next layers inputs
+    let indexOfOutputLayer = layers.length - 1
     let numOfInAndOutputs = layers.map(layer => getNumOfInAndOutputs(layer))
     numOfInAndOutputs.reduce((outputs, layer, i) => {
         if (outputs > layer.inputs) {
@@ -49,7 +38,7 @@ export function isFCNet(layers :ILayer[]) :layers is ILayer[] {
     return result
 }
 
-export function getNumOfNetInAndOutputs(layers: ILayer[]) :{inputs:number, outputs:number} {
+export function getNumOfNetInAndOutputs(layers: ILayer[]): {inputs:number, outputs:number} {
     return {
         inputs: getNumOfInAndOutputs(layers[0]).inputs,
         outputs: getNumOfInAndOutputs(layers[layers.length - 1]).outputs,
@@ -58,12 +47,12 @@ export function getNumOfNetInAndOutputs(layers: ILayer[]) :{inputs:number, outpu
 
 /* --------------------------------- Intern --------------------------------- */
 
-function isLayer(layer :ILayer) :layer is ILayer {
-    return 'actFunction' in layer && isNumber(layer.actFunction)
+function isLayer(layer: ILayer): layer is ILayer {
+    return 'actFunction' in layer && isActivationFunction(layer.actFunction)
         && 'weights' in layer  && isMatrix(layer.weights)
 }
 
-function getNumOfInAndOutputs(layer :ILayer) :{inputs:number, outputs:number} {
+function getNumOfInAndOutputs(layer: ILayer): {inputs:number, outputs:number} {
     return {
         inputs: layer.weights[0].length,
         outputs: layer.weights.length

@@ -1,17 +1,23 @@
+import { isNumber } from "./helper";
+
 /*********************************** Public ***********************************/
 
 export enum EActFunction { SIGMOID, RELU, TANH, LINEAR, BINARY }
 
-export function apply(value :number, func :EActFunction, derivative?:boolean) :number {
+export function apply(value: number, func: EActFunction, derivative?:boolean): number {
     return !derivative
         ? ACTIVATION_FUNCTIONS[func].function(value)
-        : ACTIVATION_FUNCTIONS[func].derivative(value)
+       :  ACTIVATION_FUNCTIONS[func].derivative(value)
 }
 
-export function applyToVector(vector :number[], actFunc :EActFunction, derivative?:boolean) :number[] {
+export function applyToVector(vector: number[], actFunc: EActFunction, derivative?:boolean): number[] {
     return vector.map(value => {
         return apply(value, actFunc, derivative)
     })
+}
+
+export function isActivationFunction(af: EActFunction): af is EActFunction {
+    return isNumber(af) && EActFunction.SIGMOID <= af && af <= EActFunction.BINARY
 }
 
 /*********************************** Intern ***********************************/
@@ -35,7 +41,10 @@ const ACTIVATION_FUNCTIONS:IFunction[] = [
     },
     { // TANH
         function:   (x:number):number => {return (Math.exp(x) - Math.exp(-x)) / (Math.exp(x) + Math.exp(-x))},
-        derivative: (x:number):number => {return 1 - ACTIVATION_FUNCTIONS[EActFunction.TANH].function(x) ** 2}
+        derivative: (x:number):number => {
+            let tanh = ACTIVATION_FUNCTIONS[EActFunction.TANH].function
+            return 1 - tanh(x) ** 2
+        }
     },
     { // LINEAR
         function:   (x:number):number => {return x},
