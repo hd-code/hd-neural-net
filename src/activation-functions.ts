@@ -19,7 +19,7 @@ export function applyToVector(vector: number[], actFunc: EActFunction,
 }
 
 export function isActivationFunction(af: EActFunction): af is EActFunction {
-    return isNumber(af) && EActFunction.SIGMOID <= af && af <= EActFunction.BINARY
+    return isNumber(af) && !!ACTIVATION_FUNCTIONS[af]
 }
 
 /* --------------------------------- Intern --------------------------------- */

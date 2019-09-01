@@ -30,6 +30,11 @@ export interface IOptions {
     }
 }
 
+export interface ITrainingData {
+    input: number[]
+    output: number[]
+}
+
 /** Initializes a neural net */
 export function init(numOfInputs: number, numOfOutputs: number, neuronsPerHiddenLayer?: number[],
     additional?: IOptions): IHDNeuralNet|null
@@ -87,11 +92,6 @@ export function calc(input: number[]|number[][], net: IHDNeuralNet): number[]|nu
     return null
 }
 
-export interface ITrainingData {
-    input: number[]
-    output: number[]
-}
-
 export function train(data: ITrainingData|ITrainingData[], net: IHDNeuralNet,
     learningRate?: number, precision?: number): IHDNeuralNet|null 
 {
@@ -144,6 +144,11 @@ function isHDNeuralNet(net :IHDNeuralNet) :net is IHDNeuralNet {
     net.precision = isNumber(net.precision) ? net.precision:  DEFAULT_PRECISION
 
     return true
+}
+
+function isTrainingData(data: any): data is ITrainingData {
+    return 'input'  in data && isVector(data.input)
+        && 'output' in data && isVector(data.output)
 }
 
 function setActivationFunctions(neuronsPerHiddenLayer?: number[], o?: IOptions):
@@ -205,11 +210,6 @@ function calcSet(inputs: number[][], net: IHDNeuralNet): number[][]|null {
     }, true)
 
     return allValid ? inputs.map(input => fcLayer.calc(input, net.layers)) : null
-}
-
-function isTrainingData(data: any): data is ITrainingData {
-    return 'input'  in data && isVector(data.input)
-        && 'output' in data && isVector(data.output)
 }
 
 function trainSingle(data: ITrainingData, _net: IHDNeuralNet, learningRate:number,

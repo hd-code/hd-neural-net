@@ -1,5 +1,4 @@
-import { IHDNeuralNet, ITrainingData, train, calc, init, IOptions } from "./index";
-import { EActFunction } from "./activation-functions";
+import { IHDNeuralNet, ITrainingData, train, calc, init } from "./index";
 
 // let net = init(2, 2, [8])
 // let data: ITrainingData[] = [
