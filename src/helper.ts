@@ -1,4 +1,4 @@
-/** creates clone of passed object. doesn't work if object contains functions */
+/** creates clone of passed object. attention: removes contained functions! */
 export function deepClone<T>(original: T): T {
     return JSON.parse(JSON.stringify(original))
 }

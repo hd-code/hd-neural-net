@@ -1,5 +1,5 @@
-import { EActFunction, applyToVector } from "./activation-functions";
-import { deepClone } from "./helper";
+import { deepClone, isMatrix } from "./helper";
+import { EActFunction, applyToVector, isActivationFunction } from "./activation-functions";
 
 /* --------------------------------- Public --------------------------------- */
 
@@ -77,8 +77,8 @@ export function train(_input: number[], expectedOutput: number[], learnRate: num
 
     // add bias neuron, if necessary. This is added on activation results only.
     layers.forEach((layer, i) => {
-        let diff = layer.weights[0].length - layerResults[i].activated.length
-        while (0 < diff--) layerResults[i].activated.push(1)
+        if (layer.weights[0].length - layerResults[i].activated.length === 1)
+            layerResults[i].activated.push(1)
     })
 
     // reverse layerResults -> prepare for backpropagation
@@ -123,6 +123,39 @@ export function train(_input: number[], expectedOutput: number[], learnRate: num
     result.reverse() // reverse again, to restore initial order
 
     return result
+}
+
+/* ------------------------------- Validation ------------------------------- */
+
+export function isLayer(layer: ILayer): layer is ILayer {
+    return 'actFunction' in layer && isActivationFunction(layer.actFunction)
+        && 'weights' in layer  && isMatrix(layer.weights)
+}
+
+export function doAllLayersInAndOutputMatch(layers: ILayer[]): boolean {
+    let inOutputs = layers.map(layer => getNumOfInAndOutputs(layer))
+    for (let i = 1, ie = layers.length; i < ie; i++) {
+        if (   inOutputs[i-1].outputs     !== inOutputs[i].inputs 
+            && inOutputs[i-1].outputs + 1 !== inOutputs[i].inputs)
+                return false
+    }
+    return true
+}
+
+export function doInAndOutputMatchWithNet(layers: ILayer[], numOfInputs: number, 
+    numOfOutputs?: number): boolean
+{
+    let netInputs  = getNumOfInAndOutputs(layers[0]).inputs
+    let netOutputs = getNumOfInAndOutputs(layers[layers.length - 1]).outputs
+    return (numOfInputs === netInputs || numOfInputs + 1 === netInputs)
+        && (!numOfOutputs || netOutputs === numOfOutputs)
+}
+
+function getNumOfInAndOutputs(layer: ILayer): {inputs:number, outputs:number} {
+    return {
+        inputs: layer.weights[0].length,
+        outputs: layer.weights.length
+    }
 }
 
 /* --------------------------------- Intern --------------------------------- */
@@ -196,8 +229,8 @@ function multiplyVectorWithMatrix(_vector: number[], matrix: number[][]): number
     let vector = [..._vector]
     
     // add bias neuron if necessary
-    let diff = matrix[0].length - _vector.length
-    while (0 < diff--) vector.push(1)
+    if (matrix[0].length - _vector.length === 1)
+        vector.push(1)
 
     return matrix.map(row => {
         return vector.reduce((result, _, i) => {

@@ -1,0 +1,39 @@
+Before release:
+[x] outsource net input output validation
+[x] input output validation considering bias neuron
+[x] options actF: allLayers, allHiddenLayers, hiddenLayers, outputLayer
+[ ] make train realize if a net is not getting closer (check difference every 10000 steps)
+[ ] unit tests init, create, check net structure, run test calc
+    [ ] test createdAt, updatedAt, title/noTitle, desc/noDesc
+    [ ] 2,2 bias - no bias
+    [ ] 2,2,2 bias - no bias
+    [ ] 3,7,5,4 bias – no bias
+    [ ] special config: 
+        [ ] all: LINEAR, hidden: TANH
+        [ ] all: LINEAR, output: TANH
+        [ ] allHidden: LINEAR, one hidden: RELU
+    [ ] invalid inputs - wrong numbers
+[ ] unit test invalid net recognition for both calc and train
+    [ ] invalid Precision and Learn rate -> should be corrected
+    [ ] unknown actFunc
+    [ ] layers don't match
+    [ ] wrong num of inputs/outputs
+[ ] unit tests calc
+    [ ] with preset net: 
+        [ ] 2,2 LINEAR
+        [ ] 2,2,2 SIGMOID
+        [ ] 3,7,5,4 LINEAR, noBias/bias
+[ ] unit test train fcLayer
+    [ ] 2,2,2 net bias  preset net – run train once and see if it works
+[ ] unit test train (main)
+    [ ] init, train, calc -> x2  x5  x10,  1,1 net
+    [ ] init, train, calc -> AND  XOR,     2,4,2 net
+    [ ] init, train, calc -> AND  XOR,     2,2 net   too small net!
+[ ] JSDoc on all public functions
+[ ] preserve JSDoc comments in d.ts declaration files ???
+[ ] minify build .js files ??
+[ ] check layers in and output match separately to data structure ?
+
+New Features:
+- convolutional layers
+- pooling layers

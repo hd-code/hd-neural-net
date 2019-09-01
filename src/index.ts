@@ -1,12 +1,8 @@
 import { deepClone, isNumber, isVector, isMatrix, isArrayOf } from "./helper";
 import * as fcLayer from "./fc-layers";
-import * as fcValid from "./fc-validation";
 import { EActFunction, isActivationFunction } from "./activation-functions";
 
 /* --------------------------------- Public --------------------------------- */
-
-// TODO: INput Output check auslagern
-
 
 export interface IHDNeuralNet {
     title?: string
@@ -27,11 +23,14 @@ export interface IOptions {
     description?: string
 
     activationFunctions?: {
+        allLayers?: EActFunction
+        allHiddenLayers: EActFunction
         hiddenLayers?: EActFunction[]
         outputLayer?: EActFunction
     }
 }
 
+/** Initializes a neural net */
 export function init(numOfInputs: number, numOfOutputs: number, neuronsPerHiddenLayer?: number[],
     additional?: IOptions): IHDNeuralNet|null
 {
@@ -88,12 +87,12 @@ export function calc(input: number[]|number[][], net: IHDNeuralNet): number[]|nu
     return null
 }
 
-export interface ITraingData {
+export interface ITrainingData {
     input: number[]
     output: number[]
 }
 
-export function train(data: ITraingData|ITraingData[], net: IHDNeuralNet,
+export function train(data: ITrainingData|ITrainingData[], net: IHDNeuralNet,
     learningRate?: number, precision?: number): IHDNeuralNet|null 
 {
     if (!isHDNeuralNet(net)) {
@@ -124,72 +123,102 @@ const DEFAULT_PRECISION = .01
 const DEFAULT_ACT_FUNCTION_HIDDEN_LAYERS = EActFunction.SIGMOID
 const DEFAULT_ACT_FUNCTION_OUTPUT_LAYER  = EActFunction.RELU
 
-function isHDNeuralNet(net: IHDNeuralNet): net is IHDNeuralNet {
-    if (!('layers' in net) || !fcValid.isFCNet(net.layers)) {
+function isHDNeuralNet(net :IHDNeuralNet) :net is IHDNeuralNet {
+    if (!('layers' in net)) {
+        console.error('This net doesn\'t contain any layers')
         return false
     }
 
+    if (!isArrayOf(net.layers, fcLayer.isLayer)) {
+        console.error('The nets layers are invalid')
+        return false
+    }
+
+    if (!fcLayer.doAllLayersInAndOutputMatch(net.layers)) {
+        console.error('Some of the layers outputs don\'t match the following layers inputs')
+        return false
+    }
+
+    // correct learning rate and precision if that's necessary
     net.learningRate = isNumber(net.learningRate) ? net.learningRate:  DEFAULT_LEARNING_RATE
     net.precision = isNumber(net.precision) ? net.precision:  DEFAULT_PRECISION
+
     return true
 }
 
-function setActivationFunctions(neuronsPerHiddenlayer?: number[], o?: IOptions): EActFunction[] {
+function setActivationFunctions(neuronsPerHiddenLayer?: number[], o?: IOptions):
+    EActFunction[] 
+{
     let result: EActFunction[] = []
 
-    neuronsPerHiddenlayer && neuronsPerHiddenlayer.forEach((_,i) => {
-        let a = o && o.activationFunctions && o.activationFunctions.hiddenLayers
-            && isActivationFunction(o.activationFunctions.hiddenLayers[i])
-            ? o.activationFunctions.hiddenLayers[i]
-           :  DEFAULT_ACT_FUNCTION_HIDDEN_LAYERS
+    let allLayers :EActFunction|undefined
+    let allHiddenLayers :EActFunction
+    let hiddenLayers :EActFunction[]
+    let outputLayer :EActFunction|undefined
+
+    if (o && o.activationFunctions) {
+        let t = o.activationFunctions
+
+        if (t.allLayers && isActivationFunction(t.allLayers))
+            allLayers = t.allLayers
+
+        if (t.allHiddenLayers && isActivationFunction(t.allHiddenLayers))
+            allHiddenLayers = t.allHiddenLayers
+
+        if (t.hiddenLayers && isArrayOf(t.hiddenLayers, isActivationFunction))
+            hiddenLayers = t.hiddenLayers
+
+        if (t.outputLayer && isActivationFunction(t.outputLayer))
+            outputLayer = t.outputLayer
+    }
+
+    neuronsPerHiddenLayer && neuronsPerHiddenLayer.forEach((_,i) => {
+        let a = hiddenLayers && hiddenLayers[i] || allHiddenLayers || allLayers
+            || DEFAULT_ACT_FUNCTION_HIDDEN_LAYERS
         
         result.push(a)
     })
 
-    let a = o && o.activationFunctions && o.activationFunctions.outputLayer
-        && isActivationFunction(o.activationFunctions.outputLayer)
-        ? o.activationFunctions.outputLayer
-       :  DEFAULT_ACT_FUNCTION_OUTPUT_LAYER
+    let a = outputLayer || allLayers || DEFAULT_ACT_FUNCTION_OUTPUT_LAYER
     result.push(a)
 
     return result
 }
 
 function calcSingle(input: number[], net: IHDNeuralNet): number[]|null {
-    // if (fcValid.getNumOfNetInAndOutputs(net.layers).inputs !== input.length) {
-    //     console.error('Wrong number of input values for this net')
-    //     return null
-    // }
+    if (!fcLayer.doInAndOutputMatchWithNet(net.layers, input.length)) {
+        console.error('Wrong number of input values for this net')
+        return null
+    }
 
     return fcLayer.calc(input, net.layers)
 }
 
 function calcSet(inputs: number[][], net: IHDNeuralNet): number[][]|null {
     // check if number of inputs matches with net inputs
-    let netInputs = fcValid.getNumOfNetInAndOutputs(net.layers).inputs
     let allValid = inputs.reduce((result,input, i) => {
-        if (netInputs < input.length) {
+        if (!fcLayer.doInAndOutputMatchWithNet(net.layers, input.length)) {
             result = false
             console.error('Wrong number of input values on the ' + (i+1) + '. data set')
         }
         return result
     }, true)
 
-    return allValid ? inputs.map(input => fcLayer.calc(input, net.layers)):  null
+    return allValid ? inputs.map(input => fcLayer.calc(input, net.layers)) : null
 }
 
-function isTrainingData(data: any): data is ITraingData {
+function isTrainingData(data: any): data is ITrainingData {
     return 'input'  in data && isVector(data.input)
         && 'output' in data && isVector(data.output)
 }
 
-function trainSingle(data: ITraingData, _net: IHDNeuralNet, learningRate:number,
+function trainSingle(data: ITrainingData, _net: IHDNeuralNet, learningRate:number,
     precision:number): IHDNeuralNet|null
 {
     let net = deepClone(_net)
     let layers = net.layers
 
-    if (!doInAndOutputsMatch(data, layers)) 
+    if (!fcLayer.doInAndOutputMatchWithNet(layers, data.input.length, data.output.length)) 
     {
         console.error('Number of inputs or expected outputs don\'t match with the provided neural net')
         return null
@@ -210,14 +239,14 @@ function trainSingle(data: ITraingData, _net: IHDNeuralNet, learningRate:number,
     return net
 }
 
-function trainSet(data: ITraingData[], _net: IHDNeuralNet, learningRate:number,
+function trainSet(data: ITrainingData[], _net: IHDNeuralNet, learningRate:number,
     precision:number): IHDNeuralNet|null
 {
     let net = deepClone(_net)
     let layers = net.layers
 
     if (!data.reduce<boolean>((valid, d, i) => {
-        if (!doInAndOutputsMatch(d, layers)) {
+        if (!fcLayer.doInAndOutputMatchWithNet(layers, d.input.length, d.output.length)) {
             console.error('Number of inputs or expected outputs don\'t match with the provided neural net for ' + (i+1) + '. training data set')
             return false
         }
@@ -242,12 +271,6 @@ function trainSet(data: ITraingData[], _net: IHDNeuralNet, learningRate:number,
     net.layers = layers
     net.updatedAt = new Date
     return net
-}
-
-function doInAndOutputsMatch(data :ITraingData, layers :fcLayer.ILayer[]) :boolean {
-    let netInAndOutputs = fcValid.getNumOfNetInAndOutputs(layers)
-    return netInAndOutputs.inputs  >= data.input.length
-        && netInAndOutputs.outputs === data.output.length
 }
 
 function closeEnough(x: number[], y: number[], delta: number): boolean {
