@@ -1,4 +1,4 @@
-import { deepClone, isNumber, isVector, isMatrix, isArrayOf } from "./helper";
+import { deepClone, isNumber, isVector, isMatrix, isArrayOf, isString, isBool } from "./helper";
 import * as fcLayer from "./fc-layers";
 import { EActFunction, isActivationFunction } from "./activation-functions";
 
@@ -15,16 +15,16 @@ export interface IHDNeuralNet {
 }
 
 export interface IOptions {
-    noBias?: boolean
-    learningRate?: number
-    precision?: number
-
     title?: string
     description?: string
 
+    learningRate?: number
+    precision?: number
+    noBias?: boolean
+
     activationFunctions?: {
         allLayers?: EActFunction
-        allHiddenLayers: EActFunction
+        allHiddenLayers?: EActFunction
         hiddenLayers?: EActFunction[]
         outputLayer?: EActFunction
     }
@@ -39,12 +39,14 @@ export interface ITrainingData {
 export function init(numOfInputs: number, numOfOutputs: number, neuronsPerHiddenLayer?: number[],
     additional?: IOptions): IHDNeuralNet|null
 {
-    if (!isNumber(numOfInputs) || !isNumber(numOfOutputs
-        || neuronsPerHiddenLayer && !isVector(neuronsPerHiddenLayer))) 
+    if (  !isNumber(numOfInputs) || !isNumber(numOfOutputs)
+        || neuronsPerHiddenLayer && !isVector(neuronsPerHiddenLayer)) 
     {
         console.error('no numbers provided')
         return null
     }
+
+    let noBias = additional && isBool(additional.noBias) ? additional.noBias : undefined
 
     let actFunctions = setActivationFunctions(neuronsPerHiddenLayer, additional)
 
@@ -63,13 +65,19 @@ export function init(numOfInputs: number, numOfOutputs: number, neuronsPerHidden
     let net: IHDNeuralNet = {
         createdAt: new Date,
         updatedAt: new Date,
-        learningRate: additional && additional.precision || DEFAULT_PRECISION,
-        precision: additional && additional.precision || DEFAULT_PRECISION,
-        layers: fcLayer.init(numOfInputs, outputLayer, hiddenLayers, additional && additional.noBias)
+        learningRate: additional && isNumber(additional.learningRate) 
+                ? additional.learningRate 
+                : DEFAULT_LEARNING_RATE,
+        precision: additional && isNumber(additional.precision) 
+                ? additional.precision 
+                : DEFAULT_PRECISION,
+        layers: fcLayer.init(numOfInputs, outputLayer, hiddenLayers, noBias)
     }
 
-    if (additional && additional.title)       net.title       = additional.title
-    if (additional && additional.description) net.description = additional.description
+    if (additional && isString(additional.title))
+        net.title = additional.title
+    if (additional && isString(additional.description))
+        net.description = additional.description
 
     return net
 }
@@ -157,34 +165,38 @@ function setActivationFunctions(neuronsPerHiddenLayer?: number[], o?: IOptions):
     let result: EActFunction[] = []
 
     let allLayers :EActFunction|undefined
-    let allHiddenLayers :EActFunction
+    let allHiddenLayers :EActFunction|undefined
     let hiddenLayers :EActFunction[]
     let outputLayer :EActFunction|undefined
 
     if (o && o.activationFunctions) {
         let t = o.activationFunctions
 
-        if (t.allLayers && isActivationFunction(t.allLayers))
+        if (t.allLayers !== undefined && isActivationFunction(t.allLayers))
             allLayers = t.allLayers
 
-        if (t.allHiddenLayers && isActivationFunction(t.allHiddenLayers))
+        if (t.allHiddenLayers !== undefined && isActivationFunction(t.allHiddenLayers))
             allHiddenLayers = t.allHiddenLayers
 
-        if (t.hiddenLayers && isArrayOf(t.hiddenLayers, isActivationFunction))
+        if (t.hiddenLayers !== undefined && isArrayOf(t.hiddenLayers, isActivationFunction))
             hiddenLayers = t.hiddenLayers
 
-        if (t.outputLayer && isActivationFunction(t.outputLayer))
+        if (t.outputLayer !== undefined && isActivationFunction(t.outputLayer))
             outputLayer = t.outputLayer
     }
 
     neuronsPerHiddenLayer && neuronsPerHiddenLayer.forEach((_,i) => {
-        let a = hiddenLayers && hiddenLayers[i] || allHiddenLayers || allLayers
-            || DEFAULT_ACT_FUNCTION_HIDDEN_LAYERS
+        let a = hiddenLayers && hiddenLayers[i] ? hiddenLayers[i]
+              : allHiddenLayers !== undefined ? allHiddenLayers
+              : allLayers       !== undefined ? allLayers
+              : DEFAULT_ACT_FUNCTION_HIDDEN_LAYERS
         
         result.push(a)
     })
 
-    let a = outputLayer || allLayers || DEFAULT_ACT_FUNCTION_OUTPUT_LAYER
+    let a = outputLayer !== undefined ? outputLayer
+          : allLayers   !== undefined ? allLayers 
+          : DEFAULT_ACT_FUNCTION_OUTPUT_LAYER
     result.push(a)
 
     return result

@@ -3,16 +3,16 @@ Before release:
 [x] input output validation considering bias neuron
 [x] options actF: allLayers, allHiddenLayers, hiddenLayers, outputLayer
 [ ] make train realize if a net is not getting closer (check difference every 10000 steps)
-[ ] unit tests init, create, check net structure, run test calc
-    [ ] test createdAt, updatedAt, title/noTitle, desc/noDesc
-    [ ] 2,2 bias - no bias
-    [ ] 2,2,2 bias - no bias
-    [ ] 3,7,5,4 bias – no bias
-    [ ] special config: 
-        [ ] all: LINEAR, hidden: TANH
-        [ ] all: LINEAR, output: TANH
-        [ ] allHidden: LINEAR, one hidden: RELU
-    [ ] invalid inputs - wrong numbers
+[x] unit tests init, create, check net structure, run test calc
+    [x] test createdAt, updatedAt, title/noTitle, desc/noDesc
+    [x] 2,2 bias - no bias
+    [x] 2,2,2 bias - no bias
+    [x] 3,7,5,4 bias – no bias
+    [x] special config: 
+        [x] all: LINEAR, hidden: TANH
+        [x] all: LINEAR, output: TANH
+        [x] allHidden: LINEAR, one hidden: RELU
+    [x] invalid inputs - wrong numbers
 [ ] unit test invalid net recognition for both calc and train
     [ ] invalid Precision and Learn rate -> should be corrected
     [ ] unknown actFunc
@@ -35,5 +35,6 @@ Before release:
 [ ] check layers in and output match separately to data structure ?
 
 New Features:
+- cli with saving neural net as json file to disk
 - convolutional layers
 - pooling layers
