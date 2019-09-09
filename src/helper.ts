@@ -3,6 +3,18 @@ export function deepClone<T>(original: T): T {
     return JSON.parse(JSON.stringify(original))
 }
 
+/** 
+ * Rounds a number to the desired precision.
+ * @param number    The number to be rounded
+ * @param precision The number of digits after comma. 
+ *      Positive numbers will round after comma, thus making it more precise.
+ *      Negative numbers will round before the comma, thus lessening the precision.
+ */
+export function round(num: number, precision: number): number {
+    let factor = 10 ** precision
+    return Math.round(num * factor) / factor
+}
+
 /* ----------------------------- Type Checking ------------------------------ */
 
 export function isNumber(n:any): n is number {

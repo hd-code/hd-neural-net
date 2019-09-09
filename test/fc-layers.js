@@ -1,16 +1,16 @@
 const assert = require('assert');
 const fcl = require('../build/fc-layers');
 const actFunc = require('../build/activation-functions');
+const types = require('../build/types')
 
 
 
-/*
 describe('Test ' + __filename.substr(__dirname.length), () => {
 
 describe('init', () => {
     describe('1) 2,2 Net', () => {
         let outputLayer = {
-            actFunction: actFunc.EActFunction.RELU,
+            actFunction: types.EActFunction.RELU,
             numOfNeurons: 2
         }
         let net = fcl.init(2, outputLayer)
@@ -19,7 +19,7 @@ describe('init', () => {
             assert.strictEqual(net.length, 1)
         })
         it('layers actFunc should be ReLU', () => {
-            assert.strictEqual(net[0].actFunction, actFunc.EActFunction.RELU)
+            assert.strictEqual(net[0].actFunction, types.EActFunction.RELU)
         })
         it('layer should have 2 neurons', () => {
             assert.strictEqual(net[0].weights.length, 2)
@@ -33,12 +33,12 @@ describe('init', () => {
     describe('2) 2,2,2 Net', () => {
         let hiddenLayers = [
             {
-                actFunction: actFunc.EActFunction.SIGMOID,
+                actFunction: types.EActFunction.SIGMOID,
                 numOfNeurons: 2
             }
         ]
         let outputLayer = {
-            actFunction: actFunc.EActFunction.RELU,
+            actFunction: types.EActFunction.RELU,
             numOfNeurons: 2
         }
         let net = fcl.init(2, outputLayer, hiddenLayers)
@@ -48,7 +48,7 @@ describe('init', () => {
         })
 
         it('hidden layers actFunc should be Sigmoid', () => {
-            assert.strictEqual(net[0].actFunction, actFunc.EActFunction.SIGMOID)
+            assert.strictEqual(net[0].actFunction, types.EActFunction.SIGMOID)
         })
         it('hidden layer should have 2 neurons', () => {
             assert.strictEqual(net[0].weights.length, 2)
@@ -59,7 +59,7 @@ describe('init', () => {
         })
 
         it('output layers actFunc should be ReLU', () => {
-            assert.strictEqual(net[1].actFunction, actFunc.EActFunction.RELU)
+            assert.strictEqual(net[1].actFunction, types.EActFunction.RELU)
         })
         it('output layer should have 2 neurons', () => {
             assert.strictEqual(net[1].weights.length, 2)
@@ -73,12 +73,12 @@ describe('init', () => {
     describe('3) 2,2,2 Net without bias', () => {
         let hiddenLayers = [
             {
-                actFunction: actFunc.EActFunction.SIGMOID,
+                actFunction: types.EActFunction.SIGMOID,
                 numOfNeurons: 2
             }
         ]
         let outputLayer = {
-            actFunction: actFunc.EActFunction.RELU,
+            actFunction: types.EActFunction.RELU,
             numOfNeurons: 2
         }
         let net = fcl.init(2, outputLayer, hiddenLayers, true)
@@ -88,7 +88,7 @@ describe('init', () => {
         })
 
         it('hidden layers actFunc should be Sigmoid', () => {
-            assert.strictEqual(net[0].actFunction, actFunc.EActFunction.SIGMOID)
+            assert.strictEqual(net[0].actFunction, types.EActFunction.SIGMOID)
         })
         it('hidden layer should have 2 neurons', () => {
             assert.strictEqual(net[0].weights.length, 2)
@@ -99,7 +99,7 @@ describe('init', () => {
         })
 
         it('output layers actFunc should be ReLU', () => {
-            assert.strictEqual(net[1].actFunction, actFunc.EActFunction.RELU)
+            assert.strictEqual(net[1].actFunction, types.EActFunction.RELU)
         })
         it('output layer should have 2 neurons', () => {
             assert.strictEqual(net[1].weights.length, 2)
@@ -113,16 +113,16 @@ describe('init', () => {
     describe('4) 2,2,3,2 Net all binary as actFunc', () => {
         let hiddenLayers = [
             {
-                actFunction: actFunc.EActFunction.BINARY,
+                actFunction: types.EActFunction.BINARY,
                 numOfNeurons: 2
             },
             {
-                actFunction: actFunc.EActFunction.BINARY,
+                actFunction: types.EActFunction.BINARY,
                 numOfNeurons: 3
             }
         ]
         let outputLayer = {
-            actFunction: actFunc.EActFunction.BINARY,
+            actFunction: types.EActFunction.BINARY,
             numOfNeurons: 2
         }
         let net = fcl.init(2, outputLayer, hiddenLayers)
@@ -132,8 +132,8 @@ describe('init', () => {
         })
 
         it('hidden layers actFunc should be Binary', () => {
-            assert.strictEqual(net[0].actFunction, actFunc.EActFunction.BINARY)
-            assert.strictEqual(net[1].actFunction, actFunc.EActFunction.BINARY)
+            assert.strictEqual(net[0].actFunction, types.EActFunction.BINARY)
+            assert.strictEqual(net[1].actFunction, types.EActFunction.BINARY)
         })
         it('first hidden layer should have 2, second 3 neurons', () => {
             assert.strictEqual(net[0].weights.length, 2)
@@ -148,7 +148,7 @@ describe('init', () => {
         })
 
         it('output layers actFunc should be Binary', () => {
-            assert.strictEqual(net[2].actFunction, actFunc.EActFunction.BINARY)
+            assert.strictEqual(net[2].actFunction, types.EActFunction.BINARY)
         })
         it('output layer should have 2 neurons', () => {
             assert.strictEqual(net[2].weights.length, 2)
@@ -164,7 +164,7 @@ describe('calc', () => {
     describe('1) 2,2 net', () => {
         const NET = [
             {
-                actFunction: actFunc.EActFunction.RELU,
+                actFunction: types.EActFunction.RELU,
                 weights: [
                     [0.3, 0.5, 0.2],
                     [0.7, 0.1, 2.5]
@@ -175,8 +175,8 @@ describe('calc', () => {
         it('1', () => {
             const INPUT  = [1,1] // result: [1, 3.3]
             const OUTPUT = [
-                actFunc.apply(1, actFunc.EActFunction.RELU),
-                actFunc.apply(3.3, actFunc.EActFunction.RELU)
+                actFunc.apply(1, types.EActFunction.RELU),
+                actFunc.apply(3.3, types.EActFunction.RELU)
             ]
             let result = fcl.calc(INPUT, NET)
             assert.deepStrictEqual(result, OUTPUT)
@@ -185,8 +185,8 @@ describe('calc', () => {
         it('2', () => {
             const INPUT  = [2,1] // result: [1.3, 4]
             const OUTPUT = [
-                actFunc.apply(1.3, actFunc.EActFunction.RELU),
-                actFunc.apply(4, actFunc.EActFunction.RELU)
+                actFunc.apply(1.3, types.EActFunction.RELU),
+                actFunc.apply(4, types.EActFunction.RELU)
             ]
             let result = fcl.calc(INPUT, NET)
             assert.deepStrictEqual(result, OUTPUT)
@@ -195,8 +195,8 @@ describe('calc', () => {
         it('3', () => {
             const INPUT  = [2,-5] // result: [-1.7, 3.4]
             const OUTPUT = [
-                actFunc.apply(-1.7, actFunc.EActFunction.RELU),
-                actFunc.apply(3.4, actFunc.EActFunction.RELU)
+                actFunc.apply(-1.7, types.EActFunction.RELU),
+                actFunc.apply(3.4, types.EActFunction.RELU)
             ]
             let result = fcl.calc(INPUT, NET)
             assert.deepStrictEqual(result, OUTPUT)
@@ -206,7 +206,7 @@ describe('calc', () => {
     describe('2) 2,2 net no bias', () => {
         const NET = [
             {
-                actFunction: actFunc.EActFunction.RELU,
+                actFunction: types.EActFunction.RELU,
                 weights: [
                     [0.3, 0.5],
                     [0.7, 0.1]
@@ -217,8 +217,8 @@ describe('calc', () => {
         it('1', () => {
             const INPUT  = [1,1] // result: [0.8, 0.8]
             const OUTPUT = [
-                actFunc.apply(0.8, actFunc.EActFunction.RELU),
-                actFunc.apply(0.8, actFunc.EActFunction.RELU)
+                actFunc.apply(0.8, types.EActFunction.RELU),
+                actFunc.apply(0.8, types.EActFunction.RELU)
             ]
             let result = fcl.calc(INPUT, NET)
             result = result.map(num => round(num, 5))
@@ -228,8 +228,8 @@ describe('calc', () => {
         it('2', () => {
             const INPUT  = [2,1] // result: [1.1, 1.5]
             const OUTPUT = [
-                actFunc.apply(1.1, actFunc.EActFunction.RELU),
-                actFunc.apply(1.5, actFunc.EActFunction.RELU)
+                actFunc.apply(1.1, types.EActFunction.RELU),
+                actFunc.apply(1.5, types.EActFunction.RELU)
             ]
             let result = fcl.calc(INPUT, NET)
             assert.deepStrictEqual(result, OUTPUT)
@@ -238,8 +238,8 @@ describe('calc', () => {
         it('3', () => {
             const INPUT  = [2,-5] // result: [-1.9, 0.9]
             const OUTPUT = [
-                actFunc.apply(-1.9, actFunc.EActFunction.RELU),
-                actFunc.apply(0.9, actFunc.EActFunction.RELU)
+                actFunc.apply(-1.9, types.EActFunction.RELU),
+                actFunc.apply(0.9, types.EActFunction.RELU)
             ]
             let result = fcl.calc(INPUT, NET)
             result = result.map(num => round(num, 5))
@@ -250,14 +250,14 @@ describe('calc', () => {
     describe('3) 2,2,2 net hidden layer linear', () => {
         const NET = [
             {
-                actFunction: actFunc.EActFunction.LINEAR,
+                actFunction: types.EActFunction.LINEAR,
                 weights: [
                     [0.3, 0.5, 0.2],
                     [0.7, 0.1, 2.5]
                 ]
             },
             {
-                actFunction: actFunc.EActFunction.RELU,
+                actFunction: types.EActFunction.RELU,
                 weights: [
                     [0.3, 0.5, 0.2],
                     [0.7, 0.1, 2.5]
@@ -269,8 +269,8 @@ describe('calc', () => {
             const INPUT  = [1,1] // result hidden layer: [1, 3.3]
                                  // result output layer: [2.15, 3,53]
             const OUTPUT = [
-                actFunc.apply(2.15, actFunc.EActFunction.RELU),
-                actFunc.apply(3.53, actFunc.EActFunction.RELU)
+                actFunc.apply(2.15, types.EActFunction.RELU),
+                actFunc.apply(3.53, types.EActFunction.RELU)
             ]
             let result = fcl.calc(INPUT, NET)
             result = result.map(num => round(num, 5))
@@ -281,8 +281,8 @@ describe('calc', () => {
             const INPUT  = [2,1] // result hidden layer: [1.3, 4]
                                  // result output layer: [2.59, 3.81]
             const OUTPUT = [
-                actFunc.apply(2.59, actFunc.EActFunction.RELU),
-                actFunc.apply(3.81, actFunc.EActFunction.RELU)
+                actFunc.apply(2.59, types.EActFunction.RELU),
+                actFunc.apply(3.81, types.EActFunction.RELU)
             ]
             let result = fcl.calc(INPUT, NET)
             result = result.map(num => round(num, 5))
@@ -293,8 +293,8 @@ describe('calc', () => {
             const INPUT  = [2,-5] // result hidden layer: [-1.7, 3.4]
                                   // result output layer: [1.39, 1.65]
             const OUTPUT = [
-                actFunc.apply(1.39, actFunc.EActFunction.RELU),
-                actFunc.apply(1.65, actFunc.EActFunction.RELU)
+                actFunc.apply(1.39, types.EActFunction.RELU),
+                actFunc.apply(1.65, types.EActFunction.RELU)
             ]
             let result = fcl.calc(INPUT, NET)
             result = result.map(num => round(num, 5))
@@ -307,14 +307,14 @@ describe('train', () => {
     describe('1) 2,2,2 net hidden layer linear', () => {
         const NET = [
             {
-                actFunction: actFunc.EActFunction.LINEAR,
+                actFunction: types.EActFunction.LINEAR,
                 weights: [
                     [0.3, 0.5, 0.2],
                     [0.7, 0.1, 2.5]
                 ]
             },
             {
-                actFunction: actFunc.EActFunction.RELU,
+                actFunction: types.EActFunction.RELU,
                 weights: [
                     [0.3, 0.5, 0.2],
                     [0.7, 0.1, 2.5]
@@ -328,7 +328,7 @@ describe('train', () => {
             /*
                 result hidden layer: [1, 3.3], result output layer: [2.15, 3,53]
                 delta output layer: [1.15, 2.03] delta hidden layer: [1.766, .778]
-            *
+            */
             // TODO: check plausibility
             fcl.train(INPUT, OUTPUT, 1, NET)
         })
@@ -337,8 +337,7 @@ describe('train', () => {
 
 })
 
-/* --------------------------------- Helper --------------------------------- */
-function round(number, precision) {
-    var pow = 10 ** precision
-    return Math.round(number * pow) / pow
+function round(num, precision) {
+    let factor = 10 ** precision
+    return Math.round(num * factor) / factor
 }

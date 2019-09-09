@@ -1,20 +1,11 @@
+import { IFCLayer, IFCLayerConfig, EActFunction } from "./types";
 import { deepClone, isMatrix } from "./helper";
-import { EActFunction, applyToVector, isActivationFunction } from "./activation-functions";
+import { applyToVector, isActivationFunction } from "./activation-functions";
 
 /* --------------------------------- Public --------------------------------- */
 
-export interface ILayer {
-    actFunction: EActFunction
-    weights: number[][] // [neurons on this layer][weights for outputs from prev layer]
-}
-
-export interface ILayerConfig {
-    actFunction: EActFunction
-    numOfNeurons: number
-}
-
-export function init(numOfInputs: number, outputLayer: ILayerConfig, hiddenLayers?: ILayerConfig[],
-    noBias?: boolean): ILayer[]
+export function init(numOfInputs: number, outputLayer: IFCLayerConfig, hiddenLayers?: IFCLayerConfig[],
+    noBias?: boolean): IFCLayer[]
 {
     // prepare aux array, which holds th number of neurons for each layer except
     // the output layer
@@ -23,13 +14,13 @@ export function init(numOfInputs: number, outputLayer: ILayerConfig, hiddenLayer
         hiddenLayers.forEach(layer => neuronsPerLayer.push(layer.numOfNeurons) )
 
     // create hidden layers. Default activation function: Sigmoid
-    let result: ILayer[] = []
+    let result: IFCLayer[] = []
     if (hiddenLayers) {
         result = hiddenLayers.map((layer, i) => {
             let neurons = neuronsPerLayer[i+1]
             // if bias is used, one additional weight per neuron is needed
             let weights = neuronsPerLayer[i] + (!noBias ? 1:  0)
-            return <ILayer>{
+            return <IFCLayer>{
                 actFunction: layer.actFunction,
                 weights: createMatrixWithRandomValues(neurons, weights)
             }
@@ -40,7 +31,7 @@ export function init(numOfInputs: number, outputLayer: ILayerConfig, hiddenLayer
     // if bias is used, one additional weight per neuron is needed
     let lastLayerWeights = neuronsPerLayer[neuronsPerLayer.length - 1]
         + (!noBias ? 1:  0)
-    result.push(<ILayer>{
+    result.push(<IFCLayer>{
         actFunction: outputLayer.actFunction,
         weights: createMatrixWithRandomValues(outputLayer.numOfNeurons, lastLayerWeights)
     })
@@ -48,19 +39,19 @@ export function init(numOfInputs: number, outputLayer: ILayerConfig, hiddenLayer
     return result
 }
 
-export function calc(input: number[], layers: ILayer[]): number[] {
+export function calc(input: number[], layers: IFCLayer[]): number[] {
     return layers.reduce((result, layer) => {
         return calcLayerResult(result, layer).activated
     }, input)
 }
 
 export function train(_input: number[], expectedOutput: number[], learnRate: number,
-    layers: ILayer[]): ILayer[]
+    layers: IFCLayer[]): IFCLayer[]
 {
     let input = deepClone(_input)
 
     // make reverse version of layers -> easier to handle backward propagation
-    let layersReverse: ILayer[] = deepClone(layers)
+    let layersReverse: IFCLayer[] = deepClone(layers)
     layersReverse.reverse()
 
     // FORWARD PROPAGATION: 
@@ -127,12 +118,12 @@ export function train(_input: number[], expectedOutput: number[], learnRate: num
 
 /* ------------------------------- Validation ------------------------------- */
 
-export function isLayer(layer: ILayer): layer is ILayer {
+export function isLayer(layer: IFCLayer): layer is IFCLayer {
     return 'actFunction' in layer && isActivationFunction(layer.actFunction)
         && 'weights' in layer  && isMatrix(layer.weights)
 }
 
-export function doAllLayersInAndOutputMatch(layers: ILayer[]): boolean {
+export function doAllLayersInAndOutputMatch(layers: IFCLayer[]): boolean {
     let inOutputs = layers.map(layer => getNumOfInAndOutputs(layer))
     for (let i = 1, ie = layers.length; i < ie; i++) {
         if (   inOutputs[i-1].outputs     !== inOutputs[i].inputs 
@@ -142,7 +133,7 @@ export function doAllLayersInAndOutputMatch(layers: ILayer[]): boolean {
     return true
 }
 
-export function doInAndOutputMatchWithNet(layers: ILayer[], numOfInputs: number, 
+export function doInAndOutputMatchWithNet(layers: IFCLayer[], numOfInputs: number, 
     numOfOutputs?: number): boolean
 {
     let netInputs  = getNumOfInAndOutputs(layers[0]).inputs
@@ -151,7 +142,7 @@ export function doInAndOutputMatchWithNet(layers: ILayer[], numOfInputs: number,
         && (!numOfOutputs || netOutputs === numOfOutputs)
 }
 
-function getNumOfInAndOutputs(layer: ILayer): {inputs:number, outputs:number} {
+function getNumOfInAndOutputs(layer: IFCLayer): {inputs:number, outputs:number} {
     return {
         inputs: layer.weights[0].length,
         outputs: layer.weights.length
@@ -165,10 +156,10 @@ interface ILayerResult {
     activated: number[] // activation function applied to results from weighted
 }
 
-function calcLayerResult(input: number[], layer: ILayer): ILayerResult {
+function calcLayerResult(input: number[], layer: IFCLayer): ILayerResult {
     let result: ILayerResult = { weighted: [], activated: [] }
 
-    result.weighted  = multiplyVectorWithMatrix(input, layer.weights)
+    result.weighted  = multiplyMatrixWithVector(layer.weights, input)
     result.activated = applyToVector(result.weighted, layer.actFunction)
 
     return result
@@ -193,7 +184,7 @@ function updateDelta(prevDelta: number[], weightsToPrevLayer: number[][],
     // as its last entry. This is not needed, so it will always be ignored.
     // Nonetheless, its calculated here because of laziness. ;-)
     let matrix = transposeMatrix(weightsToPrevLayer)
-    let errorForThisLayer = multiplyVectorWithMatrix(prevDelta, matrix)
+    let errorForThisLayer = multiplyMatrixWithVector(matrix, prevDelta)
 
     // Ignores bias neuron if there is one.
     return layerResult.weighted.map((_, i) => {
@@ -218,14 +209,14 @@ function createMatrixWithRandomValues(rows: number, columns: number): number[][]
     for (var i = 0; i < rows; i++) {
         let row: number[] = []
         for (var j = 0; j < columns; j++) {
-            row.push(Math.random() + 1)
+            row.push(Math.random() + 0.01)
         }
         result.push(row)
     }
     return result
 }
 
-function multiplyVectorWithMatrix(_vector: number[], matrix: number[][]): number[] {
+function multiplyMatrixWithVector(matrix: number[][], _vector: number[]): number[] {
     let vector = [..._vector]
     
     // add bias neuron if necessary

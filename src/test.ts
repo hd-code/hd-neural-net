@@ -1,6 +1,36 @@
-import { IHDNeuralNet, ITrainingData, train, calc, init } from "./index";
+import { IHDNeuralNet, ITrainingData } from "./types";
+import { train, calc, init } from "./index";
 
-// let net = init(2, 2, [8])
+
+
+let net = init(1, 1, [2,2])
+let data: ITrainingData[] = [
+    { input: [0], output: [0] },
+    { input: [1], output: [1] },
+    { input: [2], output: [4] },
+    { input: [3], output: [9] },
+    { input: [4], output: [16] },
+    { input: [5], output: [25] },
+]
+let input = data.map(d => d.input)
+let output= data.map(d => d.output)
+
+if (net) {
+    console.log('Start training');
+    
+    let tmp = train(data, net, 1000, 0.01, 0.1)
+
+    if (tmp === null) {
+        console.log('calculation failed')
+    } else {
+        console.log(calc(input, tmp));
+        console.log(calc([6], tmp));
+    }
+}
+
+
+
+// let net = init(2, 2, [10])
 // let data: ITrainingData[] = [
 //     { input: [0,0], output:[0,0] },
 //     { input: [0,1], output:[0,1] },
@@ -23,31 +53,31 @@ import { IHDNeuralNet, ITrainingData, train, calc, init } from "./index";
 
 
 
-let net = init(1, 3, [80])
-let data: ITrainingData[] = [
-    { input: [0], output:[0,0,0] },
-    { input: [1], output:[0,0,1] },
-    { input: [2], output:[0,1,0] },
-    { input: [3], output:[0,1,1] },
-    { input: [4], output:[1,0,0] },
-    { input: [5], output:[1,0,1] },
-    { input: [6], output:[1,1,0] },
-    { input: [7], output:[1,1,1] },
-]
-let input = data.map(d => d.input)
+// let net = init(1, 3, [5,5])
+// let data: ITrainingData[] = [
+//     { input: [0], output:[0,0,0] },
+//     { input: [1], output:[0,0,1] },
+//     { input: [2], output:[0,1,0] },
+//     { input: [3], output:[0,1,1] },
+//     { input: [4], output:[1,0,0] },
+//     { input: [5], output:[1,0,1] },
+//     { input: [6], output:[1,1,0] },
+//     { input: [7], output:[1,1,1] },
+// ]
+// let input = data.map(d => d.input)
 
-if (net) {
-    console.log('Start training');
+// if (net) {
+//     console.log('Start training');
     
-    let tmp = train(data, net, .01, .1)
+//     let tmp = train(data, net, .01, .1)
 
-    if (tmp === null) {
-        console.log('calculation failed')
-    } else {
-        console.log(calc(input, tmp));
-        console.log(calc([9], tmp));
-    }
-}
+//     if (tmp === null) {
+//         console.log('calculation failed')
+//     } else {
+//         console.log(calc(input, tmp));
+//         console.log(calc([9], tmp));
+//     }
+// }
 
 
 
