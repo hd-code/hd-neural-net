@@ -1,7 +1,8 @@
-import { EActFunction } from "./types"
 import { isNumber } from "./helper";
 
 /* --------------------------------- Public --------------------------------- */
+
+export enum EActFunction { SIGMOID, RELU, TANH, LINEAR, BINARY }
 
 export function isActivationFunction(af: EActFunction): af is EActFunction {
     return isNumber(af) && !!ACTIVATION_FUNCTIONS[af]

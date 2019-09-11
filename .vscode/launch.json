@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Test Program",
-            "program": "${workspaceFolder}/build/test.js",
+            "program": "${workspaceFolder}/build/main.js",
             "preLaunchTask": "npm: ts:debug",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"

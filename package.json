@@ -5,10 +5,10 @@
     "files": [
         "build"
     ],
-    "main": "build/index.js",
+    "main": "build/fc-layers.js",
     "scripts": {
         "prepare": "npm run ts",
-        "start": "npm run ts && node build/test.js",
+        "start": "npm test",
         "test": "npm run ts && mocha",
         "ts": "rm -rf build/* && tsc",
         "ts:debug": "rm -rf build/* && tsc --sourceMap"
@@ -20,7 +20,7 @@
         "machine-learning"
     ],
     "author": "Hannes Dröse",
-    "license": "ISC",
+    "license": "UNLICENSED",
     "devDependencies": {
         "mocha": "^6.2.0",
         "typescript": "^3.5.3"

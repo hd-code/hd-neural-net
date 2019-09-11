@@ -1,34 +1,20 @@
 Before release:
-[x] outsource net input output validation
-[x] input output validation considering bias neuron
-[x] options actF: allLayers, allHiddenLayers, hiddenLayers, outputLayer
-[x] unit tests init, create, check net structure, run test calc
-    [x] test createdAt, updatedAt, title/noTitle, desc/noDesc
-    [x] 2,2 bias - no bias
-    [x] 2,2,2 bias - no bias
-    [x] 3,7,5,4 bias – no bias
-    [x] special config: 
-        [x] all: LINEAR, hidden: TANH
-        [x] all: LINEAR, output: TANH
-        [x] allHidden: LINEAR, one hidden: RELU
-    [x] invalid inputs - wrong numbers
-[ ] unit test invalid net recognition for both calc and train
-    [ ] invalid Precision and Learn rate -> should be corrected
-    [ ] unknown actFunc
-    [ ] layers don't match
-    [ ] wrong num of inputs/outputs
-[ ] unit tests calc
-    [ ] with preset net: 
-        [ ] 2,2 LINEAR
-        [ ] 2,2,2 SIGMOID
-        [ ] 3,7,5,4 LINEAR, noBias/bias
-[ ] unit test train fcLayer
-    [ ] 2,2,2 net bias  preset net – run train once and see if it works
-[ ] unit test train (main)
-    [ ] init, train, calc -> x2  x5  x10,  1,1 net
-    [ ] init, train, calc -> AND  XOR,     2,4,2 net
-    [ ] init, train, calc -> AND  XOR,     2,2 net   too small net!
+[x] unit test integration
+    [x] init, train, calc -> x2              – 1,1 net
+    [x] init, train, calc -> AND OR XOR XNOR – 2,8,4 net
+    [x] init, train, calc -> ackermann       – 2,8,1 net
+[ ] unit test isValid
+    [ ] invalid net
+    [ ] in- and outputs don't match
+    [ ] wrong number of inputs
+    [ ] wrong number of outputs
+    [ ] valid net, input and output
 [ ] JSDoc on all public functions
+[ ] README file
+
+General:
+[ ] better testing framework?
+[ ] output types.d.ts as only declaration file
 
 New Features:
 - cli with saving neural net as json file to disk
