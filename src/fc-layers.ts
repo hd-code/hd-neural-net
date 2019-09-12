@@ -1,11 +1,11 @@
-import { INet, IFCLayer, IFCLayerConfig } from "./types";
+// import { INet, IFCLayer, IFCLayerConfig } from "./types";
 import * as helper from "./helper";
 import { EActFunction, applyToVector, isActivationFunction } from "./activation-functions";
 
 /* --------------------------------- Public --------------------------------- */
 
-export function init(numOfInputs: number, outputLayer: IFCLayerConfig, hiddenLayers?: IFCLayerConfig[],
-    noBias?: boolean): INet
+export function init(numOfInputs :number, outputLayer :IFCLayerConfig, 
+    hiddenLayers ?:IFCLayerConfig[], noBias ?:boolean) :INet
 {
     // prepare aux array, which holds th number of neurons for each layer except
     // the output layer
@@ -39,14 +39,14 @@ export function init(numOfInputs: number, outputLayer: IFCLayerConfig, hiddenLay
     return result
 }
 
-export function calc(input: number[], layers: INet): number[] {
+export function calc(input :number[], layers :INet) :number[] {
     return layers.reduce((result, layer) => {
         return calcLayerResult(result, layer).activated
     }, input)
 }
 
-export function train(_input: number[], expectedOutput: number[], learnRate: number,
-    layers: INet): INet
+export function train(_input :number[], expectedOutput :number[], learnRate :number,
+    layers :INet) :INet
 {
     let input = helper.deepClone(_input)
 
@@ -128,6 +128,20 @@ export function isValid(layers :INet, input ?:number[], output ?:number[]) :bool
         return false
     }
     return true
+}
+
+/* --------------------------------- Types ---------------------------------- */
+
+interface INet extends Array<IFCLayer> {}
+
+interface IFCLayer {
+    actFunction: EActFunction
+    weights: number[][] // [neurons on prev layer][neurons on this layer]
+}
+
+interface IFCLayerConfig {
+    actFunction?: EActFunction
+    numOfNeurons: number
 }
 
 /* ------------------------------- Validation ------------------------------- */
