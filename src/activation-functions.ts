@@ -2,7 +2,7 @@ import { isNumber } from "./helper";
 
 /* --------------------------------- Public --------------------------------- */
 
-export enum ACT_FUNC { 
+export enum EActFunc { 
     Linear,
     Sigmoid,
     Tanh,
@@ -14,14 +14,14 @@ export enum ACT_FUNC {
     Binary 
 }
 
-export function isActivationFunction(af: ACT_FUNC): af is ACT_FUNC {
-    return isNumber(af) && !!ACTIVATION_FUNCTIONS[af]
+export function isActivationFunction(af: EActFunc): af is EActFunc {
+    return isNumber(af) && !!FUNCTIONS[af]
 }
 
-export function applyToVector(vector: number[], actFunc: ACT_FUNC, 
+export function applyToVector(vector: number[], actFunc: EActFunc, 
     derivative?: boolean): number[]
 {
-    return actFunc !== ACT_FUNC.Softmax
+    return actFunc !== EActFunc.Softmax
         ? vector.map(value => applyToSingleVal(value, actFunc, derivative))
         : applySoftmaxToVector(vector, derivative)
 }
@@ -33,51 +33,51 @@ interface IFunction {
     derivative: (x: number) => number
 }
 
-const ACTIVATION_FUNCTIONS :{[func in ACT_FUNC]: IFunction} = {
-    [ACT_FUNC.Linear]: {
+const FUNCTIONS :{[func in EActFunc]: IFunction} = {
+    [EActFunc.Linear]: {
         function:   (x:number):number => { return x },
         derivative: (x:number):number => { return 1 }
     },
-    [ACT_FUNC.Sigmoid]: {
+    [EActFunc.Sigmoid]: {
         function:   (x:number):number => { return 1 / (1 + Math.exp(-x)) },
         derivative: (x:number):number => {
-            let sig = ACTIVATION_FUNCTIONS[ACT_FUNC.Sigmoid].function
+            let sig = FUNCTIONS[EActFunc.Sigmoid].function
             return sig(x) * (1 - sig(x))
         }
     },
-    [ACT_FUNC.Tanh]: {
+    [EActFunc.Tanh]: {
         function:   (x:number):number => {
             return (Math.exp(x) - Math.exp(-x)) / (Math.exp(x) + Math.exp(-x))
         },
         derivative: (x:number):number => {
-            let tanh = ACTIVATION_FUNCTIONS[ACT_FUNC.Tanh].function
+            let tanh = FUNCTIONS[EActFunc.Tanh].function
             return 1 - tanh(x) ** 2
         }
     },
-    [ACT_FUNC.HardTanh]: {
+    [EActFunc.HardTanh]: {
         function:   (x:number):number => { return Math.max(-1, Math.min(x, 1)) },
         derivative: (x:number):number => { return (-1 < x && x < 1) ? 1 : 0 }
     },
-    [ACT_FUNC.RectifiedLinear]: {
+    [EActFunc.RectifiedLinear]: {
         function:   (x:number):number => { return Math.max(0,x) },
         derivative: (x:number):number => { return x > 0 ? 1 : 0 }
     },
-    [ACT_FUNC.LeakyRectifiedLinear]: {
+    [EActFunc.LeakyRectifiedLinear]: {
         function:   (x:number):number => { return Math.max(0.01 * x, x) },
         derivative: (x:number):number => { return x > 0 ? 1 : 0.01 }
     },
-    [ACT_FUNC.SoftPlus]: {
+    [EActFunc.SoftPlus]: {
         function:   (x:number):number => { return Math.log(1 + Math.exp(x)) },
         derivative: (x:number):number => {
-            const sigmoid = ACTIVATION_FUNCTIONS[ACT_FUNC.Sigmoid].function
+            const sigmoid = FUNCTIONS[EActFunc.Sigmoid].function
             return sigmoid(x)
         }
     },
-    [ACT_FUNC.Softmax]: {
+    [EActFunc.Softmax]: {
         function:   (x:number):number => { return x },
         derivative: (x:number):number => { return 1 }
     },
-    [ACT_FUNC.Binary]: {
+    [EActFunc.Binary]: {
         function:   (x:number):number => { return x < 0 ? 0 : 1 },
         derivative: (x:number):number => { return x === 0 ? 0 : Math.random() }
     }
@@ -90,8 +90,8 @@ function applySoftmaxToVector(values: number[], derivative?: boolean): number[] 
         : values.map(value => 1) // TODO!!! 
 }
 
-function applyToSingleVal(value: number, func: ACT_FUNC, derivative?:boolean): number {
+function applyToSingleVal(value: number, func: EActFunc, derivative?:boolean): number {
     return !derivative
-        ? ACTIVATION_FUNCTIONS[func].function(value)
-       :  ACTIVATION_FUNCTIONS[func].derivative(value)
+        ? FUNCTIONS[func].function(value)
+       :  FUNCTIONS[func].derivative(value)
 }

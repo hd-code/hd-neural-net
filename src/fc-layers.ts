@@ -1,27 +1,27 @@
 import { createMatrixWithRandomValues, deepClone, multiplyVectorWithMatrix, transposeMatrix } from "./helper";
-import { ACT_FUNC, applyToVector } from "./activation-functions";
+import { EActFunc, applyToVector } from "./activation-functions";
 
 /* --------------------------------- Public --------------------------------- */
 
 export interface IFCLayer {
-    actFunc: ACT_FUNC
+    actFunc: EActFunc
     weights: number[][] // [prevNeuron][thisLayersNeuron]
 }
 
 export interface IFCLayerConfig {
-    actFunc: ACT_FUNC
+    actFunc: EActFunc
     numOfNeurons: number
 }
 
 export function init(numOfInputs: number, layers: IFCLayerConfig[], noBias?: boolean): IFCLayer[] {
-    const tmp = [numOfInputs, ...layers.map(layer => layer.numOfNeurons)]
-    const neuronsPerLayer = !noBias // add bias neuron if wanted
-        ? tmp.map((n,i) => (i !== tmp.length-1) ? n + 1 : n)
-        : tmp
+    const neuronsPerLayer = [numOfInputs, ...layers.map(layer => layer.numOfNeurons)]
     return layers.map((layerConf, i) => {
         return {
             actFunc: layerConf.actFunc,
-            weights: createMatrixWithRandomValues(neuronsPerLayer[i], neuronsPerLayer[i+1])
+            weights: createMatrixWithRandomValues(
+                neuronsPerLayer[i] + (!noBias ? 1 : 0),
+                neuronsPerLayer[i+1]
+            )
         }
     })
 }
@@ -127,7 +127,7 @@ function calcLayerResult(_input: number[], layer: IFCLayer): ILayerResult {
 }
 
 function initialDelta(expOutput: number[], layerResult: ILayerResult, 
-    actFunc: ACT_FUNC): number[] 
+    actFunc: EActFunc): number[] 
 {
     let gradients = applyToVector(layerResult.weighted, actFunc, true)
 
@@ -137,7 +137,7 @@ function initialDelta(expOutput: number[], layerResult: ILayerResult,
 }
 
 function updateDelta(prevDelta: number[], weightsToPrevLayer: number[][],
-    layerResult: ILayerResult, actFunc: ACT_FUNC): number[] 
+    layerResult: ILayerResult, actFunc: EActFunc): number[] 
 {
     let gradients = applyToVector(layerResult.weighted, actFunc, true)
 

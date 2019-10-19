@@ -8,7 +8,7 @@
     "main": "build/main.js",
     "scripts": {
         "prepare": "npm run ts",
-        "start": "npm run ts && node build/main",
+        "start": "npm run ts && node test/binary",
         "test": "npm run ts && mocha",
         "ts": "rm -rf build/* && tsc",
         "ts:debug": "rm -rf build/* && tsc --sourceMap"
