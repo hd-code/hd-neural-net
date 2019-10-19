@@ -1,57 +1,41 @@
-// import { INet, IFCLayer, IFCLayerConfig } from "./types";
-import * as helper from "./helper";
-import { EActFunction, applyToVector, isActivationFunction } from "./activation-functions";
+import { createMatrixWithRandomValues, deepClone, multiplyVectorWithMatrix, transposeMatrix } from "./helper";
+import { ACT_FUNC, applyToVector } from "./activation-functions";
 
 /* --------------------------------- Public --------------------------------- */
 
-export function init(numOfInputs :number, outputLayer :IFCLayerConfig, 
-    hiddenLayers ?:IFCLayerConfig[], noBias ?:boolean) :INet
-{
-    // prepare aux array, which holds th number of neurons for each layer except
-    // the output layer
-    let neuronsPerLayer: number[] = [numOfInputs]
-    if (hiddenLayers)
-        hiddenLayers.forEach(layer => neuronsPerLayer.push(layer.numOfNeurons) )
+export interface IFCLayer {
+    actFunc: ACT_FUNC
+    weights: number[][] // [prevNeuron][thisLayersNeuron]
+}
 
-    // create hidden layers. Default activation function: Sigmoid
-    let result: IFCLayer[] = []
-    if (hiddenLayers) {
-        result = hiddenLayers.map((layer, i) => {
-            let neurons = neuronsPerLayer[i+1]
-            // if bias is used, one additional weight per neuron is needed
-            let weights = neuronsPerLayer[i] + (!noBias ? 1:  0)
-            return <IFCLayer>{
-                actFunction: layer.actFunction || EActFunction.SIGMOID,
-                weights: helper.createMatrixWithRandomValues(weights, neurons)
-            }
-        })
-    }
+export interface IFCLayerConfig {
+    actFunc: ACT_FUNC
+    numOfNeurons: number
+}
 
-    // add output layer, Default activation function: ReLU
-    // if bias is used, one additional weight per neuron is needed
-    let lastLayerWeights = neuronsPerLayer[neuronsPerLayer.length - 1]
-        + (!noBias ? 1:  0)
-    result.push(<IFCLayer>{
-        actFunction: outputLayer.actFunction || EActFunction.RELU,
-        weights: helper.createMatrixWithRandomValues(lastLayerWeights, outputLayer.numOfNeurons)
+export function init(numOfInputs: number, layers: IFCLayerConfig[], noBias?: boolean): IFCLayer[] {
+    const tmp = [numOfInputs, ...layers.map(layer => layer.numOfNeurons)]
+    const neuronsPerLayer = !noBias // add bias neuron if wanted
+        ? tmp.map((n,i) => (i !== tmp.length-1) ? n + 1 : n)
+        : tmp
+    return layers.map((layerConf, i) => {
+        return {
+            actFunc: layerConf.actFunc,
+            weights: createMatrixWithRandomValues(neuronsPerLayer[i], neuronsPerLayer[i+1])
+        }
     })
-
-    return result
 }
 
-export function calc(input :number[], layers :INet) :number[] {
-    return layers.reduce((result, layer) => {
-        return calcLayerResult(result, layer).activated
-    }, input)
+export function calc(layers: IFCLayer[], values: number[]): number[] {
+    const  layerResults = calcLayerResults(values, layers)
+    return layerResults[layerResults.length - 1].activated
 }
 
-export function train(_input :number[], expectedOutput :number[], learnRate :number,
-    layers :INet) :INet
-{
-    let input = helper.deepClone(_input)
+export function train(layers: IFCLayer[], _input: number[], expOutput: number[], learnRate: number): IFCLayer[] {
+    let input = deepClone(_input)
 
     // make reverse version of layers -> easier to handle backward propagation
-    let layersReverse: IFCLayer[] = helper.deepClone(layers)
+    let layersReverse: IFCLayer[] = deepClone(layers)
     layersReverse.reverse()
 
     // FORWARD PROPAGATION: 
@@ -87,9 +71,9 @@ export function train(_input :number[], expectedOutput :number[], learnRate :num
     let deltas: number[][] = []
     layersReverse.forEach((_, i) => {
         deltas[i] = (i === 0)
-            ? initialDelta(expectedOutput, layerResults[i], layersReverse[i].actFunction)
+            ? initialDelta(expOutput, layerResults[i], layersReverse[i].actFunc)
            :  updateDelta(deltas[i-1], layersReverse[i-1].weights, layerResults[i], 
-                layersReverse[i].actFunction)
+                layersReverse[i].actFunc)
     })
 
     // update weights
@@ -110,67 +94,6 @@ export function train(_input :number[], expectedOutput :number[], learnRate :num
     return result
 }
 
-export function isValid(layers :INet, input ?:number[], output ?:number[]) :boolean {
-    if (!helper.isArrayOf(layers, isLayer)) {
-        console.error('Invalid data type for the layers')
-        return false
-    }
-    if (!doAllLayersInAndOutputMatch(layers)) {
-        console.error('Some layers produce the wrong number of outputs for the following layer')
-        return false
-    }
-    if (input && input.length !== getNumOfInAndOutputs(layers[0]).inputs) {
-        console.error('Number of inputs don\'t match with the neural net')
-        return false
-    }
-    if (output && output.length !== getNumOfInAndOutputs(layers[layers.length-1]).outputs) {
-        console.error('Number of outputs don\'t match with the neural net')
-        return false
-    }
-    return true
-}
-
-/* --------------------------------- Types ---------------------------------- */
-
-export interface INet extends Array<IFCLayer> {}
-
-export interface IFCLayer {
-    actFunction: EActFunction
-    weights: number[][] // [neurons on prev layer][neurons on this layer]
-}
-
-export interface IFCLayerConfig {
-    actFunction?: EActFunction
-    numOfNeurons: number
-}
-
-export { EActFunction } from './activation-functions'
-
-/* ------------------------------- Validation ------------------------------- */
-
-function isLayer(layer: IFCLayer): layer is IFCLayer {
-    return 'actFunction' in layer && isActivationFunction(layer.actFunction)
-        && 'weights' in layer  && helper.isMatrix(layer.weights)
-}
-
-function doAllLayersInAndOutputMatch(layers: IFCLayer[]): boolean {
-    let inOutputs = layers.map(layer => getNumOfInAndOutputs(layer))
-    for (let i = 1, ie = layers.length; i < ie; i++) {
-        if (   inOutputs[i-1].outputs     !== inOutputs[i].inputs // no bias
-            && inOutputs[i-1].outputs + 1 !== inOutputs[i].inputs // with bias
-        )
-            return false
-    }
-    return true
-}
-
-function getNumOfInAndOutputs(layer: IFCLayer): {inputs:number, outputs:number} {
-    return {
-        inputs: layer.weights.length,
-        outputs: layer.weights[0].length
-    }
-}
-
 /* --------------------------------- Intern --------------------------------- */
 
 interface ILayerResult {
@@ -179,7 +102,7 @@ interface ILayerResult {
 }
 
 function calcLayerResults(_input: number[], layers: IFCLayer[]): ILayerResult[] {
-    let input = helper.deepClone(_input)
+    let input = deepClone(_input)
 
     let result :ILayerResult[] = []
     layers.forEach(layer => {
@@ -191,38 +114,38 @@ function calcLayerResults(_input: number[], layers: IFCLayer[]): ILayerResult[] 
 
 function calcLayerResult(_input: number[], layer: IFCLayer): ILayerResult {
     // append bias neuron if necessary
-    let input = helper.deepClone(_input)
+    let input = deepClone(_input)
     if (input.length + 1 === layer.weights.length)
         input.push(1)
 
     let result: ILayerResult = { weighted: [], activated: [] }
 
-    result.weighted  = helper.multiplyVectorWithMatrix(input, layer.weights)
-    result.activated = applyToVector(result.weighted, layer.actFunction)
+    result.weighted  = multiplyVectorWithMatrix(input, layer.weights)
+    result.activated = applyToVector(result.weighted, layer.actFunc)
 
     return result
 }
 
-function initialDelta(expectedOutput: number[], layerResult: ILayerResult, 
-    actFunc: EActFunction): number[] 
+function initialDelta(expOutput: number[], layerResult: ILayerResult, 
+    actFunc: ACT_FUNC): number[] 
 {
     let gradients = applyToVector(layerResult.weighted, actFunc, true)
 
-    return expectedOutput.map((_, i) => {
-        return gradients[i] * (layerResult.activated[i] - expectedOutput[i])
+    return expOutput.map((_, i) => {
+        return gradients[i] * (layerResult.activated[i] - expOutput[i])
     })
 }
 
 function updateDelta(prevDelta: number[], weightsToPrevLayer: number[][],
-    layerResult: ILayerResult, actFunc: EActFunction): number[] 
+    layerResult: ILayerResult, actFunc: ACT_FUNC): number[] 
 {
     let gradients = applyToVector(layerResult.weighted, actFunc, true)
 
     // If there is a bias neuron, errorForThisLayer has a delta for that bias
     // as its last entry. This is not needed, so it will always be ignored.
     // Nonetheless, its calculated here because of laziness. ;-)
-    let matrix = helper.transposeMatrix(weightsToPrevLayer)
-    let errorForThisLayer = helper.multiplyVectorWithMatrix(prevDelta, matrix)
+    let matrix = transposeMatrix(weightsToPrevLayer)
+    let errorForThisLayer = multiplyVectorWithMatrix(prevDelta, matrix)
 
     // Ignores bias neuron if there is one.
     return layerResult.weighted.map((_, i) => {

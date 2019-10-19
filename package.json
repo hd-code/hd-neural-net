@@ -5,10 +5,10 @@
     "files": [
         "build"
     ],
-    "main": "build/fc-layers.js",
+    "main": "build/main.js",
     "scripts": {
         "prepare": "npm run ts",
-        "start": "npm test",
+        "start": "npm run ts && node build/main",
         "test": "npm run ts && mocha",
         "ts": "rm -rf build/* && tsc",
         "ts:debug": "rm -rf build/* && tsc --sourceMap"

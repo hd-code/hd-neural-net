@@ -4,7 +4,7 @@ const actFunc = require('../build/activation-functions');
 const helper = require('../build/helper')
 
 const PRECISION = 3 // all calculations should be rounded to 3 digits after comma
-
+/*
 describe('Test ' + __filename.substr(__dirname.length), () => {
 
 describe('init()', () => {
@@ -338,10 +338,10 @@ describe('train()', () => {
         const INPUT  = [1,1]
         const OUTPUT = [1,1.5]
         const LR = .1 // learningRate
-        /*
-            result hidden layer: [1, 3.3],     result output layer: [2.15, 3,53]
-                delta hidden layer: [1.766, .778], delta output layer: [1.15, 2.03]
-        */
+        
+        // result hidden layer: [1, 3.3],     result output layer: [2.15, 3,53]
+        //  delta hidden layer: [1.766, .778], delta output layer: [1.15, 2.03]
+        
         const WEIGHTS_HIDDEN = helper.roundMatrix([
             // input * delta * learningRate
             [0.3 - 1 * 1.766 * LR, 0.7 - 1 * .778 * LR],
@@ -495,3 +495,5 @@ describe('integration tests', () => {
 })
 
 })
+
+*/
