@@ -32,66 +32,22 @@ export function calc(layers: IFCLayer[], values: number[]): number[] {
 }
 
 export function train(layers: IFCLayer[], _input: number[], expOutput: number[], learnRate: number): IFCLayer[] {
-    let input = deepClone(_input)
+    // FORWARD PROPAGATION
+    const layerResults = calcLayerResults(_input, layers)
 
-    // make reverse version of layers -> easier to handle backward propagation
-    let layersReverse: IFCLayer[] = deepClone(layers)
-    layersReverse.reverse()
+    // BACKWARD PROPAGATION
 
-    // FORWARD PROPAGATION: 
+    const actRes = [_input, ...layerResults.map(lr => lr.activated)]
+    const actResults = actRes.map(ar => [...ar, 1])
+    const deltas = calcDelta(layers, layerResults, expOutput)
 
-    // calc LayerResults and store all intermediate results
-    let layerResults: ILayerResult[] = calcLayerResults(input, layers)
-    layerResults.unshift(<ILayerResult>{ activated: input, weighted: [] })
-
-    // add bias neuron, if necessary. This is added on activation results only.
-    layers.forEach((layer, i) => {
-        if (layer.weights.length - layerResults[i].activated.length === 1)
-            layerResults[i].activated.push(1)
+    return layers.map((_,i) => {
+        const newWeights = updateWeights(deltas[i], layers[i].weights, actResults[i], learnRate)
+        return <IFCLayer>{
+            actFunc: layers[i].actFunc,
+            weights: newWeights
+        }
     })
-
-    // reverse layerResults -> prepare for backpropagation
-    layerResults.reverse()
-
-    // BACKPROPAGATION: 
-    
-    // calc deltas
-    // Delta basically tells how much the result is "off".
-    // Calculation: f'(w) * e
-    //      f' ... derivative of activation function
-    //      w  ... weighted result, so the result before activation function was
-    //              applied, basically layersResult.weighted[i]
-    //      e  ... the error for this specific neuron. On the output layer this
-    //              can be calculated using the expected output (the difference
-    //              between calculated and expected output). On the hidden
-    //              layers the error from the previous layers (ergo their delta)
-    //              must be distributed to these layers neurons using the 
-    //              corresponding weights. This is done by multiplying the prev
-    //              delta with the transposed weight matrix.
-    let deltas: number[][] = []
-    layersReverse.forEach((_, i) => {
-        deltas[i] = (i === 0)
-            ? initialDelta(expOutput, layerResults[i], layersReverse[i].actFunc)
-           :  updateDelta(deltas[i-1], layersReverse[i-1].weights, layerResults[i], 
-                layersReverse[i].actFunc)
-    })
-
-    // update weights
-    // Calculation: w - d * r * l
-    //      w ... weight to be updated
-    //      d ... delta for the corresponding neuron
-    //      r ... layer result from previous layer with activation function
-    //              applied. Corresponds to the weight for prev layers' neuron
-    //      l ... learning rate. used to damp and smooth the learning process
-    let result = layersReverse.map((layer, i) => {
-        // layerResults has to be from i+1, because its the actual previous 
-        // layers result
-        layer.weights = updateWeights(deltas[i], layer.weights, layerResults[i+1].activated, learnRate)
-        return layer
-    })
-    result.reverse() // reverse again, to restore initial order
-
-    return result
 }
 
 /* --------------------------------- Intern --------------------------------- */
@@ -103,20 +59,18 @@ interface ILayerResult {
 
 function calcLayerResults(_input: number[], layers: IFCLayer[]): ILayerResult[] {
     let input = deepClone(_input)
-
-    let result :ILayerResult[] = []
-    layers.forEach(layer => {
-        result.push(calcLayerResult(input, layer))
-        input = result[result.length - 1].activated
+    let result: ILayerResult[] = []
+    layers.forEach((layer, i) => {
+        result.push( calcLayerResult(input, layer) )
+        input = result[i].activated
     })
     return result
 }
 
 function calcLayerResult(_input: number[], layer: IFCLayer): ILayerResult {
-    // append bias neuron if necessary
+    // append bias neuron, is ignored if not needed
     let input = deepClone(_input)
-    if (input.length + 1 === layer.weights.length)
-        input.push(1)
+    input.push(1)
 
     let result: ILayerResult = { weighted: [], activated: [] }
 
@@ -126,36 +80,43 @@ function calcLayerResult(_input: number[], layer: IFCLayer): ILayerResult {
     return result
 }
 
-function initialDelta(expOutput: number[], layerResult: ILayerResult, 
-    actFunc: EActFunc): number[] 
-{
-    let gradients = applyToVector(layerResult.weighted, actFunc, true)
+function calcDelta(layers: IFCLayer[], layerResults: ILayerResult[], expOutput: number[]):number[][] {
+    const gradients = calcGradients(layers, layerResults)
 
-    return expOutput.map((_, i) => {
-        return gradients[i] * (layerResult.activated[i] - expOutput[i])
+    // calc delta on output layer
+    //      gradient * (actualResult - expectedOutput)
+    const errorOnOutputLayer = layerResults[layerResults.length-1].activated.map((res, i) => {
+        return gradients[gradients.length-1][i] * (res - expOutput[i])
     })
+
+    // calc deltas on hidden layers
+    //      gradient * (prevDelta * WeightMatrix^T)
+    //          WeightMatrix^T...weight matrix of current layer, transposed to 
+    //                           distribute the delta backwards
+    return layers.reduceRight((result, _, i) => {
+        if (i === 0)
+            return result
+        const prevDelta = result[0]
+        const matrix = transposeMatrix(layers[i].weights)
+        const errorOnCurrentLayer = multiplyVectorWithMatrix(prevDelta, matrix)
+        const delta = gradients[i].map((_, j) => {
+            return gradients[i][j] * errorOnCurrentLayer[j]
+        })
+        return [delta, ...result]
+    }, [errorOnOutputLayer])
 }
 
-function updateDelta(prevDelta: number[], weightsToPrevLayer: number[][],
-    layerResult: ILayerResult, actFunc: EActFunc): number[] 
-{
-    let gradients = applyToVector(layerResult.weighted, actFunc, true)
-
-    // If there is a bias neuron, errorForThisLayer has a delta for that bias
-    // as its last entry. This is not needed, so it will always be ignored.
-    // Nonetheless, its calculated here because of laziness. ;-)
-    let matrix = transposeMatrix(weightsToPrevLayer)
-    let errorForThisLayer = multiplyVectorWithMatrix(prevDelta, matrix)
-
-    // Ignores bias neuron if there is one.
-    return layerResult.weighted.map((_, i) => {
-        return gradients[i] * errorForThisLayer[i]
-    })
+// calc gradients for each layer
+//      gradient = f'(x)
+//          f...activation function
+//          x...weighted result of prevLayer (layerResults[i].weighted)
+function calcGradients(layers: IFCLayer[], layerResults: ILayerResult[]): number[][] {
+    const ActFuncs = layers.map(layer => layer.actFunc)
+    const valBeforeAct = layerResults.map(res => res.weighted)
+    return ActFuncs.map((_,i) => applyToVector(valBeforeAct[i], ActFuncs[i], true))
 }
 
-function updateWeights(delta: number[], weights: number[][], actResultsPrevLayer: number[],
-    learnRate: number): number[][] 
-{
+function updateWeights(delta: number[], weights: number[][], actResultsPrevLayer: number[], learnRate: number): number[][] {
     return weights.map((_, i) => {
         return weights[i].map((_, j) => {
             return weights[i][j] - delta[j] * actResultsPrevLayer[i] * learnRate

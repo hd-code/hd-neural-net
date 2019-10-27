@@ -25,7 +25,6 @@ export interface INetConfig {
 
 /**
  * @typedef ITrainData
- * @
  */
 export interface ITrainData {
     input:  number[]

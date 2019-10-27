@@ -52,11 +52,11 @@ export function createMatrixWithRandomValues(rows: number, columns: number): num
 }
 
 export function multiplyVectorWithMatrix(vector: number[], matrix: number[][]): number[] {
-    if (vector.length !== matrix.length)
+    if (vector.length < matrix.length)
         console.error('Vector and Matrix don\'t match')
 
     return matrix[0].map((_, i) => {
-        return vector.reduce((result, _, j) => {
+        return matrix.reduce((result, _, j) => {
             return result + vector[j] * matrix[j][i]
         }, 0)
     })
