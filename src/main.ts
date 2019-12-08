@@ -94,7 +94,7 @@ export function trainSet(net: INet, data:ITrainData[], learnRate?: number): INet
     const lr = learnRate || DEFAULT_LEARNING_RATE
 
     let d = deepClone(data)
-    d.sort(() => Math.random() * 2 - 1)
+    d.sort(() => (Math.random() - .5))
 
     return {
         createdAt: net.createdAt,

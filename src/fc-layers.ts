@@ -36,13 +36,11 @@ export function train(layers: IFCLayer[], _input: number[], expOutput: number[],
     const layerResults = calcLayerResults(_input, layers)
 
     // BACKWARD PROPAGATION
-
-    const actRes = [_input, ...layerResults.map(lr => lr.activated)]
-    const actResults = actRes.map(ar => [...ar, 1])
     const deltas = calcDelta(layers, layerResults, expOutput)
+    const actRes = [_input, ...layerResults.map(lr => lr.activated)]
 
     return layers.map((_,i) => {
-        const newWeights = updateWeights(deltas[i], layers[i].weights, actResults[i], learnRate)
+        const newWeights = updateWeights(deltas[i], layers[i].weights, actRes[i], learnRate)
         return <IFCLayer>{
             actFunc: layers[i].actFunc,
             weights: newWeights
@@ -68,9 +66,9 @@ function calcLayerResults(_input: number[], layers: IFCLayer[]): ILayerResult[] 
 }
 
 function calcLayerResult(_input: number[], layer: IFCLayer): ILayerResult {
-    // append bias neuron, is ignored if not needed
+    // append bias neuron
     let input = deepClone(_input)
-    input.push(1)
+    while (input.length < layer.weights.length) input.push(1);
 
     let result: ILayerResult = { weighted: [], activated: [] }
 
@@ -81,7 +79,7 @@ function calcLayerResult(_input: number[], layer: IFCLayer): ILayerResult {
 }
 
 function calcDelta(layers: IFCLayer[], layerResults: ILayerResult[], expOutput: number[]):number[][] {
-    const gradients = calcGradients(layers, layerResults)
+    const gradients = calcGradients(layers, layerResults) 
 
     // calc delta on output layer
     //      gradient * (actualResult - expectedOutput)
@@ -96,11 +94,14 @@ function calcDelta(layers: IFCLayer[], layerResults: ILayerResult[], expOutput: 
     return layers.reduceRight((result, _, i) => {
         if (i === 0)
             return result
+
         const prevDelta = result[0]
         const matrix = transposeMatrix(layers[i].weights)
         const errorOnCurrentLayer = multiplyVectorWithMatrix(prevDelta, matrix)
-        const delta = gradients[i].map((_, j) => {
-            return gradients[i][j] * errorOnCurrentLayer[j]
+
+        const delta = errorOnCurrentLayer.map((_, j) => {
+            const gradient = gradients[i][j] !== undefined ? gradients[i][j] : 1
+            return gradient * errorOnCurrentLayer[j]
         })
         return [delta, ...result]
     }, [errorOnOutputLayer])
@@ -116,7 +117,9 @@ function calcGradients(layers: IFCLayer[], layerResults: ILayerResult[]): number
     return ActFuncs.map((_,i) => applyToVector(valBeforeAct[i], ActFuncs[i], true))
 }
 
-function updateWeights(delta: number[], weights: number[][], actResultsPrevLayer: number[], learnRate: number): number[][] {
+function updateWeights(delta: number[], weights: number[][], _actResultsPrevLayer: number[], learnRate: number): number[][] {
+    let actResultsPrevLayer = deepClone(_actResultsPrevLayer)
+    actResultsPrevLayer.push(1)
     return weights.map((_, i) => {
         return weights[i].map((_, j) => {
             return weights[i][j] - delta[j] * actResultsPrevLayer[i] * learnRate
