@@ -18,9 +18,7 @@ export function isActivationFunction(af: EActFunc): af is EActFunc {
     return isNumber(af) && !!FUNCTIONS[af]
 }
 
-export function applyToVector(vector: number[], actFunc: EActFunc, 
-    derivative?: boolean): number[]
-{
+export function applyToVector(vector: number[], actFunc: EActFunc, derivative?: boolean): number[] {
     return actFunc !== EActFunc.Softmax
         ? vector.map(value => applyToSingleVal(value, actFunc, derivative))
         : applySoftmaxToVector(vector, derivative)
@@ -83,15 +81,15 @@ const FUNCTIONS :{[func in EActFunc]: IFunction} = {
     }
 }
 
+function applyToSingleVal(value: number, func: EActFunc, derivative?:boolean): number {
+    return !derivative
+        ? FUNCTIONS[func].function(value)
+        : FUNCTIONS[func].derivative(value)
+}
+
 function applySoftmaxToVector(values: number[], derivative?: boolean): number[] {
     const divider = values.reduce((result, value) => result + Math.exp(value), 0)
     return !derivative
         ? values.map(value => Math.exp(value) / divider)
         : values.map(value => 1) // TODO!!! 
-}
-
-function applyToSingleVal(value: number, func: EActFunc, derivative?:boolean): number {
-    return !derivative
-        ? FUNCTIONS[func].function(value)
-       :  FUNCTIONS[func].derivative(value)
 }

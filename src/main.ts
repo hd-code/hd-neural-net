@@ -1,8 +1,8 @@
-import { EActFunc } from "./activation-functions";
-import * as fcLayers from "./fc-layers";
-import { deepClone } from "./helper";
+import { EActFunc } from "./activation-functions"
+import * as fcLayers from "./fc-layers"
+import { deepClone } from "./helper"
 
-/* --------------------------------- Types ---------------------------------- */
+/* --------------------------------- Public --------------------------------- */
 
 export { EActFunc } from "./activation-functions"
 
@@ -12,97 +12,71 @@ export interface INet {
     fcLayers: fcLayers.IFCLayer[]
 }
 
-export interface INetConfig {
-    neuronsPerHiddenLayer?: number[]
-    actFunc?: {
-        allLayers?: EActFunc
-        hiddenLayers?: EActFunc
-        outputLayer?:  EActFunc
-        perLayer?: EActFunc[]
-    },
+export interface INetOptions {
+    hiddenLayers?: EActFunc
+    outputLayer?:  EActFunc
     noBias?: boolean
 }
 
-/**
- * @typedef ITrainData
- */
-export interface ITrainData {
-    input:  number[]
-    output: number[]
-}
+export function init(numOfInputs: number, numOfOutputs: number, neuronsPerHiddenLayer?: number[], options?: INetOptions): INet {
+    const actFHidden = options && options.hiddenLayers !== undefined
+        ? options.hiddenLayers : DEFAULT_ACT_FUNC_HIDDEN_LAYER
+    const actFOutput = options && options.outputLayer !== undefined
+        ? options.outputLayer : DEFAULT_ACT_FUNC_OUTPUT_LAYER
+    const noBias = options && options.noBias || false
 
-/* ------------------------------- Functions -------------------------------- */
 
-/**
- * Creates an untrained neural net with random weights.
- */
-export function init(numOfInputs: number, numOfOutputs: number, config?: INetConfig): INet {
     let layers: fcLayers.IFCLayerConfig[] = []
-
-    if (config && config.neuronsPerHiddenLayer ) {
-        config.neuronsPerHiddenLayer.forEach((numOfNeurons, i) => {
-            layers.push({
-                actFunc: 
-                    config.actFunc && config.actFunc.perLayer
-                    && config.actFunc.perLayer[i] !== undefined
-                        ? config.actFunc.perLayer[i] :
-                    config.actFunc && config.actFunc.hiddenLayers !== undefined
-                        ? config.actFunc.hiddenLayers :
-                    config.actFunc && config.actFunc.allLayers !== undefined
-                        ? config.actFunc.allLayers
-                        : DEFAULT_ACT_FUNC_HIDDEN_LAYER,
-                numOfNeurons: numOfNeurons
-            })
+    neuronsPerHiddenLayer && neuronsPerHiddenLayer.forEach(numOfNeurons => {
+        layers.push({
+            actFunc: actFHidden,
+            numOfNeurons
         })
-    }
-
+    })
     layers.push({
-        actFunc: 
-            config && config.actFunc && config.actFunc.outputLayer !== undefined
-                ? config.actFunc.outputLayer :
-            config && config.actFunc && config.actFunc.allLayers !== undefined
-                ? config.actFunc.allLayers
-                : DEFAULT_ACT_FUNC_OUTPUT_LAYER,
+        actFunc: actFOutput,
         numOfNeurons: numOfOutputs
     })
 
     return {
         createdAt: new Date,
         updatedAt: new Date,
-        fcLayers: fcLayers.init(numOfInputs, layers, config && config.noBias)
+        fcLayers: fcLayers.init(numOfInputs, layers, noBias)
     }
 }
 
-/**
- * Runs one calculation with a given neural net and one set of input values.
- */
-export function calc(net: INet, values: number[]): number[] {
-    return fcLayers.calc(net.fcLayers, values)
+export function calc(input: number[], net: INet): number[] {
+    return fcLayers.calc(input, net.fcLayers)
 }
 
-export function train(net: INet, input: number[], expOutput: number[], learnRate?: number): INet {
-    learnRate = learnRate || DEFAULT_LEARNING_RATE
+export function train(input: number[], expOutput: number[], net: INet, learnRate?: number): INet {
+    return {
+        createdAt: net.createdAt,
+        fcLayers: fcLayers.train(input, expOutput, net.fcLayers, learnRate||DEFAULT_LEARNING_RATE),
+        updatedAt: new Date
+    }
+}
+
+export interface IDataSet {
+    input:  number[],
+    output: number[]
+}
+
+export function trainSet(_data: IDataSet[], net: INet, _learnRate?: number): INet {
+    const learnRate = _learnRate || DEFAULT_LEARNING_RATE
+
+    let data = deepClone(_data)
+    data.sort(() => (Math.random() - .5))
+    
+    const trainedNet = data.reduce(
+        (layers, data) => fcLayers.train(data.input, data.output, layers, learnRate),
+        net.fcLayers
+    )
 
     return {
         createdAt: net.createdAt,
         updatedAt: new Date,
-        fcLayers: fcLayers.train(net.fcLayers, input, expOutput, learnRate)
-    }
-}
-
-export function trainSet(net: INet, data:ITrainData[], learnRate?: number): INet {
-    const lr = learnRate || DEFAULT_LEARNING_RATE
-
-    let d = deepClone(data)
-    d.sort(() => (Math.random() - .5))
-
-    return {
-        createdAt: net.createdAt,
-        updatedAt: new Date,
-        fcLayers: d.reduce(
-            (layers, set) => fcLayers.train(layers, set.input, set.output, lr),
-            net.fcLayers
-        )
+        fcLayers: trainedNet
     }
 }
 
@@ -110,4 +84,4 @@ export function trainSet(net: INet, data:ITrainData[], learnRate?: number): INet
 
 const DEFAULT_ACT_FUNC_HIDDEN_LAYER = EActFunc.Sigmoid
 const DEFAULT_ACT_FUNC_OUTPUT_LAYER = EActFunc.RectifiedLinear
-const DEFAULT_LEARNING_RATE = .01
+const DEFAULT_LEARNING_RATE = 0.01
