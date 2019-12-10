@@ -28,6 +28,18 @@ export function transposeMatrix(matrix: number[][]): number[][] {
     return matrix[0].map((_, i) => matrix.map(row => row[i]))
 }
 
+export function addMatrix(matrix1: number[][], matrix2: number[][]): number[][] {
+    return matrix1.map((_,i) => addVec(matrix1[i], matrix2[i]))
+}
+
+export function subMatrix(matrix1: number[][], matrix2: number[][]): number[][] {
+    return matrix1.map((_,i) => subVec(matrix1[i], matrix2[i]))
+}
+
+export function scaleMatrix(scale: number, matrix: number[][]): number[][] {
+    return matrix.map(row => scaleVec(scale, row))
+}
+
 export function createRandomMatrix(rows: number, columns: number): number[][] {
     let result: number[][] = []
     for (var i = 0; i < rows; i++) result.push(createRandomVector(columns))

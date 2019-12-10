@@ -5,7 +5,7 @@ const fs = require('fs')
 const print = console.log
 
 
-const epoches = 10000
+const epoches = 100000
 const learnRate = .01
 
 const layers = [

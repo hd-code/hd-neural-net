@@ -1,4 +1,4 @@
-import { mulVecMat, subVec, transposeMatrix, mulVec, scaleVec, createRandomMatrix } from './math';
+import { mulVecMat, subVec, transposeMatrix, mulVec, scaleVec, createRandomMatrix, subMatrix, scaleMatrix } from './math';
 import { EActFunc, applyToVector } from './activation-functions';
 import { deepClone } from './helper';
 
@@ -64,10 +64,10 @@ export function train(input: number[], expOutput: number[], layers: IFCLayer[], 
     // update weights and return new layers
     return layers.map((layer, layerI) => ({
         actFunc: layer.actFunc,
-        weights: layer.weights.map((row, i) => {
-            const rowInput = layerOutputs[layerI][i]
-            return subVec(row, scaleVec(learnRate * rowInput, deltas[layerI]))
-        })
+        weights: subMatrix(
+            layer.weights,
+            createDeltaWeightMatrix(learnRate, layerOutputs[layerI], deltas[layerI])
+        )
     }))
 }
 
@@ -105,4 +105,8 @@ function calcLayerOutput(_input: number[], layer: IFCLayer, derivative?: boolean
 
 function hasBias(input: number[], layers: IFCLayer[]): boolean {
     return input.length + 1 === layers[0].weights.length
+}
+
+function createDeltaWeightMatrix(learnRate: number, layerOutput: number[], delta: number[]): number[][] {
+    return scaleMatrix(learnRate, layerOutput.map(val =>  scaleVec(val, delta)))
 }
