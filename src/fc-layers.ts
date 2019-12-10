@@ -86,16 +86,10 @@ function calcLayerOutputs(input: number[], layers: IFCLayer[], withBias?:boolean
         : result
 }
 
-/** Calculates the derivative of the activation function on all hidden layers plus the output layer. Adds a 1 for the bias neuron if there is one. */
+/** Calculates the derivative of the activation function on all hidden layers plus the output layer. */
 function calcLayersDerivative(input: number[], layers: IFCLayer[]): number[][] {
-    const outputLayer = layers.length - 1
-
     const layerResults = calcLayerOutputs(input, layers)
-    const result = layers.map((layer, i) => calcLayerOutput(layerResults[i], layer, true))
-
-    return hasBias(input, layers)
-        ? result.map((layer, i) => i === outputLayer ? layer : [...layer, 1])
-        : result
+    return layers.map((layer, i) => calcLayerOutput(layerResults[i], layer, true))
 }
 
 /** Calculates either the output for a given layer or the derivative of the activation function on this layer. This is determined by the derivative flag */
