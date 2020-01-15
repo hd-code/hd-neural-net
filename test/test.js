@@ -1,11 +1,11 @@
-const fcl = require('./build/fc-layers')
-const {EActFunc} = require('./build/activation-functions')
+const fcl = require('../build/fc-layers')
+const {EActFunc} = require('../build/activation-functions')
 const fs = require('fs')
 
 const print = console.log
 
 
-const epoches = 100000
+const epoches = 10000
 const learnRate = .01
 
 const layers = [

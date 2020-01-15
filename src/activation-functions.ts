@@ -71,6 +71,7 @@ const FUNCTIONS :{[func in EActFunc]: IFunction} = {
             return sigmoid(x)
         }
     },
+    // TODO!
     [EActFunc.Softmax]: {
         function:   (x:number):number => { return x },
         derivative: (x:number):number => { return 1 }
