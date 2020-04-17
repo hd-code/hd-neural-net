@@ -7,10 +7,9 @@
     ],
     "main": "build/main.js",
     "scripts": {
-        "minify": "for i in $(find ./build -name *.js); do uglifyjs $i -o $i -mc --comments '/^!/'; done",
-        "prepare": "npm run ts && npm run minify",
-        "start": "npm test",
-        "test": "npm run prepare && mocha $(find ./test -type f)",
+        "prepare": "npm run ts",
+        "start": "npm run ts && node test/test.js",
+        "test": "npm run ts && mocha",
         "ts": "rm -rf build/* && tsc",
         "ts:debug": "rm -rf build/* && tsc --sourceMap"
     },
@@ -23,8 +22,7 @@
     "author": "Hannes Dröse",
     "license": "UNLICENSED",
     "devDependencies": {
-        "mocha": "^7.0.0",
-        "typescript": "^3.7.5",
-        "uglify-js": "^3.7.5"
+        "mocha": "^6.2.0",
+        "typescript": "^3.5.3"
     }
 }
