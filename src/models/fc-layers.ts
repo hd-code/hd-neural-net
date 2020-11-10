@@ -20,9 +20,9 @@ export function init(numOfInputs: number, layers: IFCLayerConfig[], noBias?: boo
     const neuronsPerLayer = [numOfInputs, ...layers.map(lc => lc.numOfNeurons)];
     return layers.map((_, i) => ({
         actFunc: layers[i].actFunc,
-        weights: [...Array(neuronsPerLayer[i] + (noBias ? 0 : 1))].map(() => (
+        weights: [...Array(neuronsPerLayer[i] + (noBias ? 0 : 1))].map(() =>
             [...Array(neuronsPerLayer[i+1])].map(() => getFloat())
-        )),
+        ),
     }));
 }
 
@@ -97,7 +97,9 @@ function calcLayersDerivative(input: number[], layers: IFCLayer[]): number[][] {
 function calcLayerOutput(_input: number[], layer: IFCLayer, derivative?: boolean): number[] {
     // add bias neuron
     const input = deepClone(_input);
-    while (input.length < layer.weights.length) input.push(1);
+    while (input.length < layer.weights.length) {
+        input.push(1);
+    }
 
     // calc result
     const result = Vector.mulMatrix(input, layer.weights);

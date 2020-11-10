@@ -65,7 +65,7 @@ export function trainSet(_data: IDataSet[], net: INet, _learnRate?: number): INe
     const learnRate = _learnRate || DEFAULT_LEARNING_RATE;
 
     const data = deepClone(_data);
-    data.sort(() => (Math.random() - .5));
+    data.sort(() => Math.random() - .5);
 
     const trainedNet = data.reduce(
         (layers, data) => fcLayers.train(data.input, data.output, layers, learnRate),

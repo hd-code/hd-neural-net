@@ -9,8 +9,12 @@
  * _Attention_: Classes are not correctly cloned.
  */
 export function clone<T>(original: T): T {
-    if (Array.isArray(original)) return (original as any).slice();
-    if (original !== null && typeof original === 'object') return {...original};
+    if (Array.isArray(original)) {
+        return (original as any).slice();
+    }
+    if (original !== null && typeof original === 'object') {
+        return {...original};
+    }
     return original;
 }
 

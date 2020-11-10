@@ -1,4 +1,6 @@
-import { isInteger } from "../helper/type-guards";
+import { isInteger } from '../helper/type-guards';
+
+// -----------------------------------------------------------------------------
 
 export enum Activation {
     Linear,
@@ -38,7 +40,7 @@ function softmaxDerivative(input: number[]): number[] {
 // -----------------------------------------------------------------------------
 
 interface IFunction {
-    function:   (x: number) => number
+    function: (x: number) => number
     derivative: (x: number) => number
 }
 
@@ -59,14 +61,14 @@ const functions :{[func in Activation]?: IFunction} = {
     [Activation.Tanh]: {
         function: x => (Math.exp(x) - Math.exp(-x)) / (Math.exp(x) + Math.exp(-x)),
         derivative: (x:number):number => {
-            let tanh = (Math.exp(x) - Math.exp(-x)) / (Math.exp(x) + Math.exp(-x));
+            const tanh = (Math.exp(x) - Math.exp(-x)) / (Math.exp(x) + Math.exp(-x));
             return 1 - tanh ** 2;
         },
     },
 
     [Activation.HardTanh]: {
         function:   x => Math.max(-1, Math.min(x, 1)),
-        derivative: x => (-1 < x && x < 1) ? 1 : 0,
+        derivative: x => -1 < x && x < 1 ? 1 : 0,
     },
 
     [Activation.RectifiedLinear]: {
@@ -88,4 +90,4 @@ const functions :{[func in Activation]?: IFunction} = {
         function:   x => x < 0 ? 0 : 1,
         derivative: x => x === 0 ? 0 : Math.random(),
     }
-}
+};

@@ -17,5 +17,5 @@ export default function round<T extends number|number[]|number[][]|number[][][]>
         return result as T;
     }
     const factor = 10 ** precision;
-    return Math.round((input as number) * factor) / factor as T;
+    return Math.round(input as number * factor) / factor as T;
 }

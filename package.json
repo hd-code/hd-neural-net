@@ -9,7 +9,7 @@
   "scripts": {
     "build": "npm run clear && tsc && npm run minify",
     "clear": "rm -rf dist",
-    "lint": "eslint --fix src",
+    "lint": "eslint --fix src test",
     "minify": "for i in $(find dist -name *.js); do uglifyjs $i -o $i -mc; done;",
     "prepare": "npm run build",
     "start": "ts-node src/index.ts",
