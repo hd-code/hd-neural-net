@@ -1,10 +1,11 @@
-# System Files
+/dist
+
+# macOS
 .DS_Store
 
-# Editor Files
-.vscode
+# npm
+node_modules/
+package-lock.json
 
-# Project Files
-/build
-/node_modules
-/package-lock.json
+# vscode
+.vscode
