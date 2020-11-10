@@ -1,8 +1,8 @@
-import { Activation, calcActivation } from './activation';
-import { deepClone } from '../helper/clone';
-import * as Vector from '../helper/vector';
-import * as Matrix from '../helper/matrix';
-import { getFloat } from '../helper/random';
+import { Activation, calcActivation } from '../src/models/activation';
+import { deepClone } from '../src/helper/clone';
+import * as Vector from '../src/helper/vector';
+import * as Matrix from '../src/helper/matrix';
+import { getFloat } from '../src/helper/random';
 
 // -----------------------------------------------------------------------------
 

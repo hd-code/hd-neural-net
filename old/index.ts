@@ -1,10 +1,10 @@
-import { Activation } from './models/activation';
-import * as fcLayers from './models/fc-layers';
-import { deepClone } from './helper/clone';
+import { Activation } from '../src/models/activation';
+import * as fcLayers from './fc-layers';
+import { deepClone } from '../src/helper/clone';
 
 // -----------------------------------------------------------------------------
 
-export { Activation } from './models/activation';
+export { Activation } from '../src/models/activation';
 
 export interface INet {
     createdAt: Date

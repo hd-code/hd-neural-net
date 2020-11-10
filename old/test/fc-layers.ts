@@ -1,11 +1,11 @@
 import * as assert from 'assert';
-import { calc, init, train } from '../../src/models/fc-layers';
+import { calc, init, train } from '../fc-layers';
 import { Activation } from '../../src/models/activation';
 import round from '../../src/helper/round';
 
 // -----------------------------------------------------------------------------
 
-describe.only('Test init()', () => {
+describe('Test init()', () => {
     describe('1) 2,2 net', () => {
         const layerConfig = [
             { numOfNeurons: 2, actFunc: Activation.RectifiedLinear }
@@ -197,13 +197,16 @@ describe.only('Test init()', () => {
 describe('Test calc()', () => {
     describe('1) 2,2 net – noBias, Linear', () => {
         const net = [
-            { actFunc: Activation.Linear,
-                weights: [ [.2, .6],
-                    [.5, .3] ]
+            {   
+                actFunc: Activation.Linear,
+                weights: [
+                    [.2, .6],
+                    [.5, .3]
+                ]
             }
         ];
 
-        it('input: [0,0] -> output: [0,0]', () => {
+        it.only('input: [0,0] -> output: [0,0]', () => {
             const data = { input: [0,0], output: [0,0] };
             const result = round(calc(data.input, net), 2);
             assert.deepStrictEqual(result, data.output);
