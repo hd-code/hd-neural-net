@@ -1,6 +1,6 @@
-import { getFloat } from '../helper/random';
-import { mulVector } from '../helper/matrix';
-import { add } from '../helper/vector';
+import * as Matrix from '../../lib/math/matrix';
+import * as Vector from '../../lib/math/vector';
+import { getFloat } from '../../lib/math/random';
 
 // -----------------------------------------------------------------------------
 
@@ -23,18 +23,27 @@ export function calc(p: Perceptron, input: number[]): number {
 }
 
 export function calcBatch(p: Perceptron, input: number[][]): number[] {
-    const weighted = mulVector(input, p.weights);
+    const weighted = Matrix.mulVector(input, p.weights);
     const biased = weighted.map(x => x + p.bias);
     return binaryVector(biased);
 }
 
 export function train(p: Perceptron, input: number[], expected: number, learnRate: number): Perceptron {
-    const error = expected - calc(p, input);
-    const deltaW = p.weights.map((_, i) => learnRate * error * input[i]);
-    const deltaB = learnRate * error * p.bias;
+    const output = calc(p, input);
+    const error = expected - output;
+    const deltaW = input.map(i => error * i);
+    const deltaB = error;
     return {
-        bias: p.bias + deltaB,
-        weights: add(p.weights, deltaW),
+        bias: p.bias + learnRate * deltaB,
+        weights: p.weights.map((w,i) => w + learnRate * deltaW[i]),
+    };
+}
+
+export function trainBatch(p: Perceptron, input: number[][], expected: number[], learnRate: number): Perceptron {
+    const delta = calcDeltaBatch(p, input, expected);
+    return {
+        bias: p.bias + learnRate * delta.bias,
+        weights: Vector.add(p.weights, Vector.scale(learnRate, delta.weights)),
     };
 }
 
@@ -56,4 +65,21 @@ function binaryVector(input: number[]): number[] {
 
 function binary(input: number): number {
     return input >= 0 ? 1 : 0;
+}
+
+// -----------------------------------------------------------------------------
+
+interface Delta {
+    bias: number;
+    weights: number[];
+}
+
+function calcDeltaBatch(p: Perceptron, input: number[][], expected: number[]): Delta {
+    const error = Vector.sub(expected, calcBatch(p, input));
+    const deltaB = error;
+    const deltaW = error.map((err, i) => Vector.scale(err, input[i]));
+    return {
+        bias: Vector.avg(deltaB),
+        weights: Matrix.transpose(deltaW).map(Vector.avg),
+    };
 }

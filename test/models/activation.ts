@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import { Activation, calcActivation, isActivation } from '../../src/models/activation';
-import round from '../../src/helper/round';
+import round from '../../lib/math/round';
 
 // -----------------------------------------------------------------------------
 
@@ -8,6 +8,9 @@ describe('models/layer', () => {
     describe(isActivation.name, () => {
         it('should return true for all enum values', () => {
             for (const key in Activation) {
+                if (typeof Activation[key] !== 'number') {
+                    continue;
+                }
                 assert.ok(isActivation(Activation[key]), 'failed for ' + key);
             }
         });

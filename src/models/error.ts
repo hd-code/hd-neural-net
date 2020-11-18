@@ -1,4 +1,4 @@
-import { sum } from '../helper/vector';
+import { sum } from '../../lib/math/vector';
 
 // -----------------------------------------------------------------------------
 

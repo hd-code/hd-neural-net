@@ -1,7 +1,7 @@
-import * as Matrix from '../helper/matrix';
-import * as Vector from '../helper/vector';
+import * as Matrix from '../../lib/math/matrix';
+import * as Vector from '../../lib/math/vector';
 import { Activation, calcActivation, isActivation } from './activation';
-import { getFloat } from '../helper/random';
+import { getFloat } from '../../lib/math/random';
 
 // -----------------------------------------------------------------------------
 
