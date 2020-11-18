@@ -1,4 +1,4 @@
-import { isInteger } from '../helper/type-guards';
+import { isInteger } from '../../lib/type-guards';
 
 // -----------------------------------------------------------------------------
 

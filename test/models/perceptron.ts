@@ -1,75 +1,74 @@
-import { getFloat, setSeed } from '../../src/helper/random';
-import { deepClone } from '../../src/helper/clone';
-import * as e from '../../src/models/error';
+import * as assert from 'assert';
 import * as p from '../../src/models/perceptron';
 
 // -----------------------------------------------------------------------------
 
-const errFunc = e.Error.meanSquared;
-const numOfSamples = 100;
+describe('perceptron', () => {
+    const cases = [
+        {
+            name: 'AND perceptron',
+            learningRate: 0.1,
+            perceptron: { bias: -0.5, weights: [1.2,0.3] },
+            data: [
+                { input: [0,0], result: 0, target: 0, error: 0, deltaW: [ 0,0], deltaB: 0 },
+                { input: [0,1], result: 0, target: 0, error: 0, deltaW: [ 0,0], deltaB: 0 },
+                { input: [1,0], result: 1, target: 0, error:-1, deltaW: [-1,0], deltaB:-1 },
+                { input: [1,1], result: 1, target: 1, error: 0, deltaW: [ 0,0], deltaB: 0 },
+            ]
+        },
+        {
+            name: 'NAND perceptron',
+            learningRate: 0.1,
+            perceptron: { bias: -0.5, weights: [1.2,0.3] },
+            data: [
+                { input: [0,0], result: 0, target: 1, error: 1, deltaW: [ 0, 0], deltaB: 1 },
+                { input: [0,1], result: 0, target: 0, error: 0, deltaW: [ 0, 0], deltaB: 0 },
+                { input: [1,0], result: 1, target: 0, error:-1, deltaW: [-1, 0], deltaB:-1 },
+                { input: [1,1], result: 1, target: 0, error:-1, deltaW: [-1,-1], deltaB:-1 },
+            ]
+        },
+    ];
 
-const initError = 0.1;
-const learnError = 0.2;
+    describe(p.calc.name + '()', () => cases.forEach(({name, perceptron, data}) => {
+        it(name, () => data.forEach(({input,result: expected}) => {
+            assert.strictEqual(p.calc(perceptron, input), expected, 'failed for ' + input);
+        }));
+    }));
 
-const learnRate = 0.1;
+    describe(p.calcBatch.name + '()', () => cases.forEach(({name, perceptron, data}) => {
+        it(name, () => {
+            const input = data.map(d => d.input);
+            const expected = data.map(d => d.result);
+            const actual = p.calcBatch(perceptron, input);
+            assert.deepStrictEqual(actual, expected);
+        });
+    }));
 
-// -----------------------------------------------------------------------------
+    describe(p.train.name + '()', () => cases.forEach(({name, learningRate, perceptron, data}) => {
+        it(name, () => data.forEach(d => {
+            const expected = {
+                bias: perceptron.bias + learningRate * d.deltaB,
+                weights: perceptron.weights.map((w,i) => w + learningRate * d.deltaW[i]),
+            };
+            const actual = p.train(perceptron, d.input, d.target, learningRate);
+            assert.deepStrictEqual(actual, expected);
+        }));
+    }));
 
-// TODO: create real example on paper !!!!
+    describe(p.trainBatch.name + '()', () => cases.forEach(({name, learningRate, perceptron, data}) => {
+        it(name, () => {
+            const deltaB = data.reduce((sum, d) => sum + d.deltaB, 0) / data.length;
+            const deltaW = data[0].deltaW.map((_,i) => data.reduce((sum, d) => sum + d.deltaW[i], 0) / data.length);
+            const expected = {
+                bias: perceptron.bias + learningRate * deltaB,
+                weights: perceptron.weights.map((w,i) => w + learningRate * deltaW[i]),
+            };
 
-setSeed(1);
+            const input = data.map(d => d.input);
+            const target = data.map(d => d.target);
+            const actual = p.trainBatch(perceptron, input, target, learningRate);
 
-const N = [...Array(numOfSamples)].map(() => 1);
-
-const input = N.map(() => [getFloat(-5, 5), getFloat(-5, 5)]);
-const expected = input.map(([x,y]) => y > 0 ? 1 : 0);
-
-const initialPerceptron = p.create(2);
-
-let perceptron = deepClone(initialPerceptron);
-let actual;
-let i = 0;
-
-console.log('init perceptrons until one is found with an error rate of', initError);
-
-do {
-    perceptron = p.create(2);
-    actual = p.calcBatch(perceptron, input);
-    i++;
-} while (e.calc(actual, expected, errFunc) > initError);
-
-console.log('took', i, 'tries to get a good enough perceptron\n');
-
-// -----------------------------------------------------------------------------
-
-console.log('train first perceptron with a learn rate of', learnRate, 'until error is below', learnError);
-
-perceptron = deepClone(initialPerceptron);
-actual = p.calcBatch(perceptron, input);
-i = 0;
-
-while (e.calc(actual, expected, errFunc) > learnError) {
-    for (let i = 0, ie = input.length; i < ie; i++) {
-        perceptron = p.train(perceptron, input[i], expected[i], learnRate);
-    }
-    actual = p.calcBatch(perceptron, input);
-    i++;
-}
-
-console.log('took', i, 'epochs to get a good enough perceptron\n');
-
-// -----------------------------------------------------------------------------
-
-console.log('train first perceptron again with batch learning');
-
-perceptron = deepClone(initialPerceptron);
-actual = p.calcBatch(perceptron, input);
-i = 0;
-
-while (e.calc(actual, expected, errFunc) > learnError) {
-    perceptron = p.trainBatch(perceptron, input, expected, learnRate);
-    actual = p.calcBatch(perceptron, input);
-    i++;
-}
-
-console.log('took', i, 'epochs to get a good enough perceptron');
+            assert.deepStrictEqual(actual, expected);
+        });
+    }));
+});

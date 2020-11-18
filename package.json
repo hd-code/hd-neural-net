@@ -2,9 +2,7 @@
   "name": "hd-neural-net",
   "version": "0.0.1",
   "private": true,
-  "files": [
-    "dist"
-  ],
+  "files": ["dist","lib"],
   "main": "dist",
   "scripts": {
     "build": "npm run clear && tsc && npm run minify",
