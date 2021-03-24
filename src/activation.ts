@@ -46,9 +46,9 @@ interface Func {
     func: (x: number) => number;
     deriv: (x: number) => number;
 }
-const functions: {[act in Activation]?: Func} = {
+const functions: { [act in Activation]?: Func } = {
     [Activation.sigmoid]: {
-        func:  x => 1 / (1 + Math.exp(-x)),
+        func: x => 1 / (1 + Math.exp(-x)),
         deriv: x => {
             const sig = 1 / (1 + Math.exp(-x));
             return sig * (1 - sig);
@@ -56,39 +56,41 @@ const functions: {[act in Activation]?: Func} = {
     },
 
     [Activation.tanh]: {
-        func:  x => {
-            const exp = Math.exp(x), exn = Math.exp(-x);
+        func: x => {
+            const exp = Math.exp(x),
+                exn = Math.exp(-x);
             return (exp - exn) / (exp + exn);
         },
         deriv: x => {
-            const exp = Math.exp(x), exn = Math.exp(-x);
+            const exp = Math.exp(x),
+                exn = Math.exp(-x);
             const tanh = (exp - exn) / (exp + exn);
             return 1 - tanh ** 2;
         },
     },
 
     [Activation.hardTanh]: {
-        func:  x => Math.max(-1, Math.min(x, 1)),
-        deriv: x => -1 < x && x < 1 ? 1 : 0,
+        func: x => Math.max(-1, Math.min(x, 1)),
+        deriv: x => (-1 < x && x < 1 ? 1 : 0),
     },
 
     [Activation.linear]: {
-        func:  x => x,
+        func: x => x,
         deriv: () => 1,
     },
 
     [Activation.rectifiedLinear]: {
-        func:  x => Math.max(0,x),
-        deriv: x => x > 0 ? 1 : 0,
+        func: x => Math.max(0, x),
+        deriv: x => (x > 0 ? 1 : 0),
     },
 
     [Activation.leakyRectifiedLinear]: {
-        func:  x => Math.max(0.01 * x, x),
-        deriv: x => x > 0 ? 1 : 0.01,
+        func: x => Math.max(0.01 * x, x),
+        deriv: x => (x > 0 ? 1 : 0.01),
     },
 
     [Activation.softplus]: {
-        func:  x => Math.log(1 + Math.exp(x)),
+        func: x => Math.log(1 + Math.exp(x)),
         deriv: x => 1 / (1 + Math.exp(-x)),
     },
 };

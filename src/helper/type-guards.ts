@@ -53,6 +53,5 @@ export function isObject<T>(obj: unknown): obj is T {
 }
 
 export function hasKey<T>(obj: unknown, key: keyof T, typeGuard?: (el: unknown) => el is T[keyof T]): key is keyof T {
-    return typeof obj === 'object' && obj !== null && (key in obj)
-        && (!typeGuard || typeGuard((obj as any)[key])); // eslint-disable-line
+    return typeof obj === 'object' && obj !== null && key in obj && (!typeGuard || typeGuard((obj as any)[key])); // eslint-disable-line
 }

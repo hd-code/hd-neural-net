@@ -1,8 +1,8 @@
 # HD Neural Net
 
-This is my playground for developing a neural net library in TypeScript.
+**Project discontinued**
 
-I tune in from time to time to checkout some new ideas about the whole topic.
+This was my playground for developing a neural net library in TypeScript.
 
 ## Installation
 
@@ -19,7 +19,7 @@ npm install
 
 ## Usage
 
-... (I have not decided on the final high-level API yet)
+...
 
 ## Development
 
@@ -32,5 +32,6 @@ Project structure:
 Helpful commands:
 
 - `npm run build` will compile and minify the project to `dist/`
-- `npm run lint` will check and fix to some degree the syntax of the TypeScript files in `src/` and `test/`
+- `npm run check` will type check the code in `src/`
+- `npm run lint` will check to some degree the syntax of the TypeScript files in `src/` and `test/`
 - `npm test` will run all tests in `test/` and log the results

@@ -12,7 +12,7 @@ export function isMatrix(matrix: unknown): matrix is number[][] {
         return true;
     }
 
-    const elementsPerRow: number|undefined = matrix[0]?.length;
+    const elementsPerRow: number | undefined = matrix[0]?.length;
     if (elementsPerRow === undefined) {
         return false;
     }

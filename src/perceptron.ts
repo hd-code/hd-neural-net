@@ -10,8 +10,7 @@ export interface Perceptron {
 }
 
 export function isPerceptron(p: unknown): p is Perceptron {
-    return hasKey(p, 'bias', isNumber)
-        && hasKey(p, 'weights', Vector.isVector);
+    return hasKey(p, 'bias', isNumber) && hasKey(p, 'weights', Vector.isVector);
 }
 
 // -----------------------------------------------------------------------------
@@ -26,7 +25,7 @@ export function init(numOfInputs: number): Perceptron {
 function getRandomVector(length: number): number[] {
     const result = [];
     for (let i = 0; i < length; i++) {
-        result.push(getFloat());
+        result.push(getFloat(-1, 1));
     }
     return result;
 }
@@ -82,9 +81,7 @@ function avgDeltas(deltas: Delta[]): Delta {
     const len = deltas.length;
     return {
         bias: deltas.reduce((sum, delta) => sum + delta.bias, 0) / len,
-        weights: deltas[0].weights.map(
-            (_,i) => deltas.reduce((sum, delta) => sum + delta.weights[i], 0) / len
-        ),
+        weights: deltas[0].weights.map((_, i) => deltas.reduce((sum, delta) => sum + delta.weights[i], 0) / len),
     };
 }
 

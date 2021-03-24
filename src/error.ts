@@ -17,19 +17,27 @@ export function isError(error: unknown): error is Error {
 
 export function calc(actual: number[], expected: number[], error = Error.meanSquared): number {
     switch (error) {
-    case Error.absolute: return sum(actual, expected, absolute);
-    case Error.meanAbsolute: return mean(actual, expected, absolute);
-    case Error.squared: return sum(actual, expected, squared);
-    case Error.meanSquared: return mean(actual, expected, squared);
+        case Error.absolute:
+            return sum(actual, expected, absolute);
+        case Error.meanAbsolute:
+            return mean(actual, expected, absolute);
+        case Error.squared:
+            return sum(actual, expected, squared);
+        case Error.meanSquared:
+            return mean(actual, expected, squared);
     }
 }
 
 export function diff(actual: number[], expected: number[], error = Error.meanSquared): number[] {
     switch (error) {
-    case Error.absolute: return sumDeriv(actual, expected, absoluteDeriv);
-    case Error.meanAbsolute: return meanDeriv(actual, expected, absoluteDeriv);
-    case Error.squared: return sumDeriv(actual, expected, squaredDeriv);
-    case Error.meanSquared: return meanDeriv(actual, expected, squaredDeriv);
+        case Error.absolute:
+            return sumDeriv(actual, expected, absoluteDeriv);
+        case Error.meanAbsolute:
+            return meanDeriv(actual, expected, absoluteDeriv);
+        case Error.squared:
+            return sumDeriv(actual, expected, squaredDeriv);
+        case Error.meanSquared:
+            return meanDeriv(actual, expected, squaredDeriv);
     }
 }
 

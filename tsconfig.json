@@ -1,10 +1,16 @@
 {
   "compilerOptions": {
-    "allowJs": true,
     "declaration": true,
     "outDir": "dist",
-    "strict": true,
     "target": "es6",
-  },
-  "include": ["src"]
+
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strict": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+  }
 }

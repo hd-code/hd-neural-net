@@ -21,7 +21,7 @@ export function isANN(ann: unknown): ann is ANN {
         return false;
     }
     for (let i = 1, ie = ann.length; i < ie; i++) {
-        const numOfOutputs = ann[i-1].weights.length;
+        const numOfOutputs = ann[i - 1].weights.length;
         const numOfInputs = ann[i].weights[0].length;
         if (numOfOutputs !== numOfInputs) {
             return false;
@@ -31,10 +31,12 @@ export function isANN(ann: unknown): ann is ANN {
 }
 
 function isLayer(layer: unknown): layer is Layer {
-    return hasKey(layer, 'activation', a.isActivation)
-        && hasKey(layer, 'bias', Vector.isVector)
-        && hasKey(layer, 'weights', Matrix.isMatrix)
-        && (layer as Layer).bias.length === (layer as Layer).weights.length;
+    return (
+        hasKey(layer, 'activation', a.isActivation) &&
+        hasKey(layer, 'bias', Vector.isVector) &&
+        hasKey(layer, 'weights', Matrix.isMatrix) &&
+        (layer as Layer).bias.length === (layer as Layer).weights.length
+    );
 }
 
 // -----------------------------------------------------------------------------
@@ -46,18 +48,12 @@ export interface LayerConfig {
 
 export function init(numOfInputs: number, ...layers: LayerConfig[]): ANN {
     const numOfNeurons = [numOfInputs, ...layers.map(layer => layer.numOfNeurons)];
-    return layers.map(({activation}, i) => makeLayer(numOfNeurons[i], numOfNeurons[i + 1], activation));
+    return layers.map(({ activation }, i) => makeLayer(numOfNeurons[i], numOfNeurons[i + 1], activation));
 }
 
 function makeLayer(numOfInputs: number, numOfOutputs: number, activation: a.Activation): Layer {
-    const bias = [...Array(numOfOutputs)].map(
-        () => getFloat()
-    );
-    const weights = [...Array(numOfOutputs)].map(
-        () => [...Array(numOfInputs)].map(
-            () => getFloat()
-        )
-    );
+    const bias = [...Array(numOfOutputs)].map(() => getFloat(-1, 1));
+    const weights = [...Array(numOfOutputs)].map(() => [...Array(numOfInputs)].map(() => getFloat(-1, 1)));
     return { activation, bias, weights };
 }
 
@@ -92,7 +88,13 @@ export function train(ann: ANN, input: number[], expected: number[], errorFunc: 
     return applyDelta(ann, delta, learnRate);
 }
 
-export function trainBatch(ann: ANN, input: number[][], expected: number[][], errorFunc: e.Error, learnRate: number): ANN {
+export function trainBatch(
+    ann: ANN,
+    input: number[][],
+    expected: number[][],
+    errorFunc: e.Error,
+    learnRate: number,
+): ANN {
     const deltas = [];
     for (let i = 0, ie = input.length; i < ie; i++) {
         deltas.push(calcDelta(ann, input[i], expected[i], errorFunc));
@@ -126,7 +128,7 @@ function avgDeltas(deltas: Delta[]): Delta {
 }
 
 function calcDelta(ann: ANN, input: number[], expected: number[], errorFunc: e.Error): Delta {
-    const {actDeriv, inOutputs} = forwardPass(ann, input);
+    const { actDeriv, inOutputs } = forwardPass(ann, input);
 
     // backpropagation
     const errGradient = e.diff(inOutputs[inOutputs.length - 1], expected, errorFunc);
@@ -135,23 +137,18 @@ function calcDelta(ann: ANN, input: number[], expected: number[], errorFunc: e.E
     const deltaW = [calcDeltaW(deltaB[0], inOutputs[inOutputs.length - 2])];
 
     for (let i = ann.length - 1; i > 0; i--) {
-        deltaB.unshift(
-            Vector.mul(
-                Vector.mulMatrix(deltaB[0], Matrix.transpose(ann[i].weights)),
-                actDeriv[i - 1],
-            )
-        );
+        deltaB.unshift(Vector.mul(Vector.mulMatrix(deltaB[0], Matrix.transpose(ann[i].weights)), actDeriv[i - 1]));
         deltaW.unshift(calcDeltaW(deltaB[0], inOutputs[i - 1]));
     }
 
     const result = [];
     for (let i = 0, ie = deltaB.length; i < ie; i++) {
-        result.push({bias: deltaB[i], weights: deltaW[i]});
+        result.push({ bias: deltaB[i], weights: deltaW[i] });
     }
     return result;
 }
 
-function forwardPass(ann: ANN, input: number[]): {actDeriv: number[][], inOutputs: number[][]} {
+function forwardPass(ann: ANN, input: number[]): { actDeriv: number[][]; inOutputs: number[][] } {
     const actDeriv = [];
     const inOutputs = [input];
     for (let i = 0, ie = ann.length; i < ie; i++) {
@@ -161,7 +158,7 @@ function forwardPass(ann: ANN, input: number[]): {actDeriv: number[][], inOutput
         actDeriv.push(a.diff(biased, layer.activation));
         inOutputs.push(a.calc(biased, layer.activation));
     }
-    return {actDeriv, inOutputs};
+    return { actDeriv, inOutputs };
 }
 
 function calcDeltaW(deltaB: number[], input: number[]): number[][] {
